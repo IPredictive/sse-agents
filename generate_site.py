@@ -1,5 +1,4 @@
 import html
-import json
 from pathlib import Path
 
 from db import init_db, load_daily, load_predictions, load_scored
@@ -48,9 +47,6 @@ def bar_width(p):
         return 50
     return max(4, min(96, float(p) * 100))
 
-
-def esc_json(obj):
-    return json.dumps(obj, ensure_ascii=False).replace("</", "<\/")
 
 
 def make_line_svg(values, width=900, height=260, pct_axis=False):
@@ -218,6 +214,14 @@ def main():
     conf_text = pct(conf) if conf is not None else "-"
     change_cls = "up" if change is not None and change >= 0 else "down"
 
+    breakdown_html = "".join(
+        f"<div class='break-item'><div class='break-top'><span>{names_cn[k]}</span><strong>权重 {weights[k]:.2f}</strong></div>"
+        f"<div class='break-num {tone(preds[k].prob_up)}'>{pct(preds[k].prob_up)}</div>"
+        f"<div class='break-bar'><span style='width:{bar_width(contributions[k]):.1f}%'></span></div>"
+        f"<div class='break-top' style='margin-top:6px'><span>证据质量 {quality[k]:.0%}</span><span>贡献 {contributions[k]:.1%}</span></div></div>"
+        for k in preds
+    )
+
     html_doc = f"""<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080b12">
@@ -272,7 +276,7 @@ def main():
 <section class="section card">
 <div class="section-title"><h2>Chief Analyst 决策拆解</h2><span class="hint">动态权重 + 证据质量 + 极端值稳定化</span></div>
 <div class="breakdown">
-{''.join(f"<div class='break-item'><div class='break-top'><span>{names_cn[k]}</span><strong>权重 {weights[k]:.2f}</strong></div><div class='break-num {tone(preds[k].prob_up)}'>{pct(preds[k].prob_up)}</div><div class='break-bar'><span style='width:{bar_width(contributions[k]):.1f}%'></span></div><div class='break-top' style='margin-top:6px'><span>证据质量 {quality[k]:.0%}</span><span>贡献 {contributions[k]:.1%}</span></div></div>" for k in preds)}
+{breakdown_html}
 </div>
 <div class="reason" style="margin-top:16px">简单平均为 <b>{pct(simple_average)}</b>；经过各分析师历史表现、置信度、证据质量及分歧处理后，动态加权基准为 <b>{pct(weighted_base)}</b>。最终 Chief Analyst 为 <b>{prob_text}</b>，并根据不同信号分组的交叉验证结果进行调整。{html.escape(reason)}</div>
 </section>
