@@ -3,6 +3,35 @@ from datetime import datetime, timezone
 def _get(url,timeout=12):
     req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 sse-agents/1.0"})
     with urllib.request.urlopen(req,timeout=timeout) as r:return r.read()
+def _parse_dt(value):
+    if not value:return None
+    try:
+        from email.utils import parsedate_to_datetime
+        dt=parsedate_to_datetime(value)
+        if dt.tzinfo is None:dt=dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except Exception:return None
+
+def _clean_title(title):
+    t=re.sub(r"\\s+"," ",str(title or "")).strip()
+    t=re.sub(r"\\s+[-|｜]\\s+(新浪财经|东方财富|证券时报网|财联社|每日经济新闻|手机新浪网|财富号|雪球|证券之星)$","",t)
+    return t.strip(" -|｜")
+
+def _norm_title(title):
+    return re.sub(r"[^\\w\\u4e00-\\u9fff]+","",_clean_title(title).lower())
+
+def _similar(a,b):
+    if not a or not b:return 0.0
+    grams=lambda s:{s[i:i+2] for i in range(max(1,len(s)-1))}
+    A,B=grams(a),grams(b)
+    return len(A&B)/max(1,len(A|B))
+
+def _freshness_weight(dt,now=None,half_life_hours=36):
+    if not dt:return 0.45
+    now=now or datetime.now(timezone.utc)
+    age=max(0.0,(now-dt).total_seconds()/3600)
+    return max(0.08,2**(-age/half_life_hours))
+
 def google_news(query,limit=12,max_age_days=14):
     try:
         url="https://news.google.com/rss/search?"+urllib.parse.urlencode({"q":query,"hl":"zh-CN","gl":"CN","ceid":"CN:zh-Hans"})
