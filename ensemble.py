@@ -1,13 +1,5 @@
 from agents.base import Prediction
-
-# 初始等权；积累战绩后可按各智能体的 Brier score 调整
-WEIGHTS: dict[str, float] = {}
-
-
-def combine(preds: dict[str, Prediction]) -> Prediction | None:
-    if not preds:
-        return None
-    ws = {k: WEIGHTS.get(k, 1.0) for k in preds}
-    total = sum(ws.values())
-    prob = sum(preds[k].prob_up * ws[k] for k in preds) / total
-    return Prediction(prob, f"综合 {len(preds)} 个智能体：{', '.join(preds)}")
+WEIGHTS={}
+def combine(preds):
+    if not preds:return None
+    ws={k:WEIGHTS.get(k,1.) for k in preds};total=sum(ws.values());prob=sum(preds[k].prob_up*ws[k] for k in preds)/total;conf=sum(preds[k].confidence*ws[k] for k in preds)/total;why="；".join(f"{k}:{preds[k].prob_up:.1%}" for k in preds);return Prediction(float(prob),f"综合{len(preds)}个智能体：{why}",float(conf))
