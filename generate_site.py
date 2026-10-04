@@ -1,4 +1,4 @@
-import html, json
+import html
 from pathlib import Path
 from db import init_db,load_daily,load_predictions,load_scored
 
@@ -9,15 +9,20 @@ def pct(x):
 
 def main():
     init_db()
-    d=load_daily(); p=load_predictions(); s=load_scored()
+    d=load_daily()
+    p=load_predictions()
+    s=load_scored()
     latest=p.base_date.max() if not p.empty else "-"
     rows=p[p.base_date==latest] if not p.empty else p
+
     chief=rows[rows.agent=="CHIEF_ANALYST"]
     if chief.empty:
         chief=rows[rows.agent=="ENSEMBLE"]
+
     prob=float(chief.prob_up.iloc[0]) if not chief.empty else None
     conf=float(chief.confidence.iloc[0]) if not chief.empty else None
     reason=str(chief.reason.iloc[0]) if not chief.empty else "暂无首席分析"
+
     price=float(d.close.iloc[-1]) if not d.empty else None
     prev=float(d.close.iloc[-2]) if len(d)>1 else price
     change=(price/prev-1) if price and prev else None
@@ -26,7 +31,8 @@ def main():
     cards="".join(
         f"<div class='analyst'><div class='aname'>{html.escape(str(r.agent)).upper()}</div>"
         f"<div class='aprob'>{pct(r.prob_up)}</div><div class='muted'>信心 {pct(r.confidence)}</div>"
-        f"<p>{html.escape(str(r.reason))}</p></div>" for r in analysts)
+        f"<p>{html.escape(str(r.reason))}</p></div>" for r in analysts
+    )
 
     history=""
     if not s.empty:
@@ -41,7 +47,7 @@ def main():
 
     html_doc=f"""<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>上证 AI 首席分析台</title>
+<title>狮城胖叔·上证分析台</title>
 <style>
 *{{box-sizing:border-box}}body{{margin:0;background:#0b1020;color:#eef2ff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
 .wrap{{max-width:1180px;margin:auto;padding:28px 18px 50px}}.top{{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:22px}}
@@ -54,7 +60,7 @@ h1{{font-size:30px;margin:0 0 7px}}h2{{margin:0 0 15px;font-size:19px}}.muted{{c
 table{{width:100%;border-collapse:collapse}}th,td{{padding:10px;border-bottom:1px solid #26314b;text-align:left;font-size:14px}}
 .footer{{margin-top:25px;color:#75809a;font-size:12px}}@media(max-width:850px){{.grid,.analysts,.chiefrow{{grid-template-columns:1fr}}}}
 </style></head><body><main class="wrap">
-<div class="top"><div><h1>上证 AI 首席分析台</h1><div class="muted">每日自动更新 · 5 位 AI 分析师 + Chief Analyst</div></div><div class="muted">分析基准日：{html.escape(str(latest))}</div></div>
+<div class="top"><div><h1>狮城胖叔·上证分析台</h1><div class="muted">每日自动更新 · 5 位 AI 分析师 + Chief Analyst</div></div><div class="muted">分析基准日：{html.escape(str(latest))}</div></div>
 <div class="grid">
 <div class="card"><div class="muted">上证指数最新收盘</div><div class="big">{price_text}</div><div class="muted">{change_text} 较前一交易日</div></div>
 <div class="card"><div class="muted">Chief Analyst 上涨概率</div><div class="big {'green' if prob and prob>.5 else 'red' if prob is not None else ''}">{prob_text} · {direction}</div></div>
@@ -68,4 +74,5 @@ table{{width:100%;border-collapse:collapse}}th,td{{padding:10px;border-bottom:1p
     OUT.parent.mkdir(parents=True,exist_ok=True)
     OUT.write_text(html_doc,encoding="utf-8")
 
-if __name__=="__main__": main()
+if __name__=="__main__":
+    main()
