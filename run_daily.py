@@ -13,11 +13,11 @@ def predict_for(df,context=None):
         if p:preds[a.name]=p;save_prediction(base,a.name,p.prob_up,p.reason,p.confidence)
     ens=combine(preds)
     if ens:
-        save_prediction(base,"ENSEMBLE",ens.prob_up,ens.reason,ens.confidence)
+        save_prediction(base,"CHIEF_ANALYST",ens.prob_up,ens.reason,ens.confidence)
         print(f"\n===== SSE DAILY AI REPORT {base} =====")
         for name, pred in preds.items():
             print(f"{name:10s}  上涨概率={pred.prob_up:.1%}  信心={pred.confidence:.1%}  理由={pred.reason}")
-        print(f"ENSEMBLE    上涨概率={ens.prob_up:.1%}  信心={ens.confidence:.1%}")
+        print(f"CHIEF ANALYST 上涨概率={ens.prob_up:.1%}  信心={ens.confidence:.1%}")
         print(f"综合理由：{ens.reason}")
         print("====================================")
 
