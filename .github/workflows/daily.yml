@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: daily-sse-agents
@@ -29,13 +27,14 @@ jobs:
 
       - name: Run agents
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+          OPENAI_API_KEY: \${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: \${{ vars.OPENAI_MODEL }}
         run: python run_daily.py
 
-      - run: python generate_site.py
+      - name: Generate dashboard
+        run: python generate_site.py
 
-      - name: Commit state
+      - name: Commit state and dashboard
         run: |
           git config user.name "sse-agents[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -43,17 +42,8 @@ jobs:
           git diff --cached --quiet || git commit -m "data: daily SSE prediction"
           git push
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
       - uses: actions/upload-artifact@v4
         with:
-          name: sse-state-${{ github.run_number }}
+          name: sse-state-\${{ github.run_number }}
           path: data/sse.db
           retention-days: 30
