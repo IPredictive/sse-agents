@@ -60,6 +60,34 @@ def combine(preds,context=None):
         base_prob=0.5+0.82*(base_prob-0.5)
     elif spread>0.35:
         base_prob=0.5+0.92*(base_prob-0.5)
+
+    # Cross-validation by independent signal clusters.
+    clusters={
+        "核心市场":[k for k in ("technical","flow") if k in preds],
+        "政策情绪":[k for k in ("macro","sentiment") if k in preds],
+        "海外环境":[k for k in ("overseas",) if k in preds],
+    }
+    cluster_probs={}
+    for cname,names in clusters.items():
+        if not names: continue
+        cw=[ws[k] for k in names]
+        cluster_probs[cname]=sum(adjusted[k]*ws[k] for k in names)/sum(cw)
+
+    votes=[p>=0.5 for p in cluster_probs.values()]
+    bullish=sum(votes); bearish=len(votes)-bullish
+    if len(votes)>=2 and (bullish==len(votes) or bearish==len(votes)):
+        conf=clamp(conf+0.035,0.35,0.95)
+        consensus_prob=0.5+0.35*sum(p-0.5 for p in cluster_probs.values())/len(cluster_probs)
+        base_prob=0.72*base_prob+0.28*consensus_prob
+        cross_label="交叉验证一致"
+    elif len(votes)>=2 and min(bullish,bearish)>=1:
+        conf=clamp(conf-0.045,0.30,0.95)
+        base_prob=0.5+0.88*(base_prob-0.5)
+        cross_label="交叉验证分歧"
+    else:
+        cross_label="交叉验证样本不足"
+
+    cluster_text="；".join(f"{k}:{v:.1%}" for k,v in cluster_probs.items())
     why="；".join(f"{k}:{adjusted[k]:.1%}(证据{quality[k]:.0%}，权重{ws[k]:.2f})" for k in preds)
-    reason=f"动态加权汇总：{why}；分析师分歧={spread:.1%}；综合判断{direction_text(base_prob)}"
+    reason=f"动态加权汇总：{why}；分析师分歧={spread:.1%}；{cross_label}；分组={cluster_text}；综合判断{direction_text(base_prob)}"
     return Prediction(clamp(base_prob,0.08,0.92),reason,conf)
