@@ -34,9 +34,14 @@ def confidence_from_score(score, evidence=1.0):
     return clamp(0.50 + min(0.42, abs(score) * 0.18) * clamp(evidence, 0.5, 1.2), 0.50, 0.92)
 
 def direction_text(p):
-    if p >= 0.62: return "偏多"
-    if p <= 0.38: return "偏空"
-    return "中性"
+    p=float(p)
+    if p>=0.70:return "强烈偏多"
+    if p>=0.60:return "偏多"
+    if p>=0.53:return "中性偏多"
+    if p>0.47:return "中性"
+    if p>0.40:return "中性偏空"
+    if p>0.30:return "偏空"
+    return "强烈偏空"
 
 POSITIVE = {
     "上涨":1.0,"上升":0.8,"增长":0.7,"提振":0.9,"支持":0.8,"促进":0.7,"改善":0.6,
@@ -50,26 +55,31 @@ NEGATIVE = {
     "低迷":-0.8,"违约":-1.0,"暴跌":-1.3,"失速":-0.8,"恶化":-0.9,"压力":-0.5,"风险提示":-0.8
 }
 
-def title_sentiment(titles):
-    scores=[]
-    for raw in titles:
-        t=str(raw)
+def _news_parts(item):
+    if isinstance(item,dict):
+        return str(item.get("title","")),float(item.get("freshness_weight",1.0) or 1.0)
+    return str(item),1.0
+
+def title_sentiment(items):
+    scores=[];weights=[]
+    for raw in items or []:
+        t,w=_news_parts(raw)
+        if not t:continue
         s=0.0
-        for w,v in POSITIVE.items():
-            if w in t: s += v
-        for w,v in NEGATIVE.items():
-            if w in t: s += v
-        if "大涨" in t: s += 0.8
-        if "大跌" in t: s -= 0.8
-        if "同比" in t and ("增长" in t or "提升" in t): s += 0.25
-        scores.append(s)
-    if not scores: return 0.0, 0.0, 0
-    # Diminishing returns: repeated/keyword-heavy headlines should not dominate.
-    total=float(np.tanh(np.mean(scores)/2.2))
+        for word,v in POSITIVE.items():
+            if word in t:s+=v
+        for word,v in NEGATIVE.items():
+            if word in t:s+=v
+        if "大涨" in t:s+=0.8
+        if "大跌" in t:s-=0.8
+        if "同比" in t and ("增长" in t or "提升" in t):s+=0.25
+        scores.append(s);weights.append(max(0.08,min(1.0,w)))
+    if not scores:return 0.0,0.0,0
+    total=float(np.tanh(np.average(scores,weights=weights)/2.2))
     dispersion=float(np.std(scores))
-    evidence=min(1.0, 0.55 + len(scores)/24)
-    if dispersion > 1.4: evidence *= 0.85
-    return total, evidence, len(scores)
+    evidence=min(1.0,0.55+sum(weights)/24)
+    if dispersion>1.4:evidence*=0.85
+    return total,evidence,len(scores)
 
 def weighted_market_probability(changes, scale=0.012):
     vals=[v for v in changes if v is not None and np.isfinite(v)]
