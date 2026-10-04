@@ -1,38 +1,55 @@
-# 上证指数多智能体预测（GitHub 自动运行版）
+# 狮城胖叔·上证分析台
 
-把整个目录上传到 GitHub 后，GitHub Actions 会在每个工作日 15:35（Asia/Shanghai）运行：抓取上证指数、读取海外市场和新闻、运行 5 个 Agent、保存 SQLite 历史，并生成 `site/index.html`。
+这是一个保持 **Private** 的上证指数多智能体研究项目。
 
-## Agent
+每天工作日自动运行 5 位分析师：
 - Technical：MA / MACD / RSI
-- Flow：成交量与动量代理资金面
-- Macro：宏观/政策新闻标题
-- Sentiment：财经新闻标题
+- Flow：成交量与动量
+- Macro：宏观与政策新闻
+- Sentiment：财经新闻与市场情绪
 - Overseas：标普500、纳斯达克、恒生、美元人民币
-- ENSEMBLE：综合可用 Agent
+- Chief Analyst：综合五位分析师，给出最终上涨概率、信心与理由
 
-## GitHub
-1. 新建 repository，建议 Private。
-2. 上传全部文件。
-3. Settings → Actions → General，允许 Actions。
-4. Actions → Daily SSE Agents → Run workflow 手动跑一次。
-5. 本 workflow 使用 `contents: write`，因此需要允许 `GITHUB_TOKEN` 写入仓库内容。
+## 每日网页
 
-## LLM（可选）
-当前规则版不需要 API Key。若以后接入 LLM，可在 Settings → Secrets and variables → Actions 设置 `OPENAI_API_KEY`，再设置 `OPENAI_MODEL`。不要把密钥写入代码。
+网页文件由 GitHub Actions 自动生成到 \`site/index.html\`。
 
-## 看板
-每次运行都会更新 `site/index.html`。可以用 GitHub Pages 部署它；如果仓库/账户不支持对应的 Pages 权限，也可以直接在仓库查看，或下载 Actions artifact。
+由于当前 GitHub 账户的 Private repository 不支持直接启用 GitHub Pages，本项目改用 **Vercel** 发布网页。仓库保持 Private，不需要公开源代码。
+
+第一次部署：
+1. 在 Vercel 登录并连接 GitHub。
+2. Import \`IPredictive/sse-agents\`。
+3. Framework Preset 选择 \`Other\` / Static。
+4. Root Directory 保持 \`/\`。
+5. Deploy。
+6. 之后 GitHub Actions 每天更新 \`site/index.html\`，Vercel 会自动重新部署。
+
+仓库已经提供 \`vercel.json\`，用于把 \`site/\` 作为网站输出目录。
+
+## AI API
+
+GitHub Actions 使用：
+- \`OPENAI_API_KEY\`：Repository secret
+- \`OPENAI_MODEL\`：Repository variable
+
+不要把 API Key 写进代码、README 或网页。
+
+## GitHub Actions
+
+工作日每天运行一次。当前 cron 为 \`35 7 * * 1-5\`（UTC），对应新加坡/上海时间约 15:35。
+
+也可以在：
+\`Actions → Daily SSE Agents → Run workflow\`
+手动运行。
 
 ## 本地测试
-```bash
+
+\`\`\`bash
 pip install -r requirements.txt
 python run_daily.py --demo --backfill 60 --no-news
 python generate_site.py
-streamlit run dashboard.py
-```
+\`\`\`
 
 ## 重要
-这是研究和回测框架，不是可靠的股票预测器。所谓“上涨概率”是规则/模型输出，不是保证性的真实概率；不要据此自动交易。
 
-## GitHub Pages
-仓库上传后，先手动运行 `Daily SSE Agents`。如果在 Settings → Pages 把 Build and deployment / Source 设为 **GitHub Actions**，随后 `Deploy dashboard to GitHub Pages` 会发布 `site/`。GitHub Actions 支持 schedule 与时区配置；本项目定时任务使用上海时区。
+这是研究和回测框架，不是可靠的股票预测器。“上涨概率”是模型输出，不代表保证性的真实概率，不应据此自动交易。
