@@ -55,9 +55,18 @@ def build_context():
     for k,s in symbols.items():
         r=yahoo_return(s)
         if r is not None:overseas[k]=r
-    news_items=google_news("上证指数 OR A股 OR 沪深股市")
-    macro_items=google_news("中国 央行 OR 国务院 OR 财政政策 OR 货币政策 OR 宏观经济 股市")
-    return {"news_items":news_items,"macro_items":macro_items,"news_titles":[x["title"] for x in news_items],"macro_titles":[x["title"] for x in macro_items],"overseas":overseas}
+    news_items=google_news("上证指数 A股 沪深股市")
+    macro_items=[]
+    seen=set()
+    for q in ("中国央行 货币政策 股市","国务院 财政政策 A股","中国宏观经济 股市","降准 降息 A股"):
+        for item in google_news(q,limit=8):
+            key=_norm_title(item["title"])
+            if key in seen:continue
+            seen.add(key)
+            macro_items.append(item)
+            if len(macro_items)>=12:break
+        if len(macro_items)>=12:break
+    return {"news_items":news_items[:12],"macro_items":macro_items[:12],"news_titles":[x["title"] for x in news_items[:12]],"macro_titles":[x["title"] for x in macro_items[:12]],"overseas":overseas}
 
 def llm_news_score(titles, role):
     """可选 LLM 层：没有 OPENAI_API_KEY 时返回 None，不影响规则 Agent。"""
