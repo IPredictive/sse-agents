@@ -1,18 +1,42 @@
-from agents.ai import call_llm
 from agents.base import Prediction
+from agents.quant import clamp, confidence_from_score, direction_text
+from db import load_scored
 
-WEIGHTS={"technical":1.0,"flow":1.0,"macro":1.1,"sentiment":1.0,"overseas":0.9}
+BASE_WEIGHTS={"technical":1.00,"flow":1.00,"macro":1.10,"sentiment":0.95,"overseas":0.90}
+
+def adaptive_weights(preds):
+    weights={}
+    try:
+        scored=load_scored()
+        for name in preds:
+            x=scored[scored.agent==name].tail(60)
+            if len(x)<8:
+                weights[name]=BASE_WEIGHTS.get(name,1.0)
+                continue
+            accuracy=float(x.correct.mean())
+            brier=float(x.brier.mean())
+            # Accuracy and probability calibration jointly adjust the prior.
+            skill=0.65*accuracy+0.35*(1.0-min(1.0,brier/0.25))
+            weights[name]=BASE_WEIGHTS.get(name,1.0)*(0.75+0.85*clamp(skill,0.0,1.0))
+    except Exception:
+        weights={name:BASE_WEIGHTS.get(name,1.0) for name in preds}
+    return weights
 
 def combine(preds,context=None):
     if not preds:return None
-    ws={k:WEIGHTS.get(k,1.0) for k in preds}
+    ws=adaptive_weights(preds)
     total=sum(ws.values())
     base_prob=sum(preds[k].prob_up*ws[k] for k in preds)/total
     base_conf=sum(preds[k].confidence*ws[k] for k in preds)/total
-    payload={k:{"prob_up":round(v.prob_up,4),"confidence":round(v.confidence,4),"reason":v.reason} for k,v in preds.items()}
-    out=call_llm("Chief Analyst（首席策略分析师）","审阅五位分析师的独立结论，识别分歧、判断哪些证据更可靠，给出最终的上证指数下一交易日上涨概率与信心。不要机械平均。",payload)
-    if out:
-        p,conf,reason=out
-        return Prediction(p,"Chief Analyst："+reason,conf)
-    why="；".join(f"{k}:{preds[k].prob_up:.1%}" for k in preds)
-    return Prediction(float(base_prob),f"五位分析师加权汇总：{why}",float(base_conf))
+    # Reward agreement, penalize unresolved disagreement.
+    spread=max(v.prob_up for v in preds.values())-min(v.prob_up for v in preds.values())
+    agreement=max(0.0,1.0-spread/0.55)
+    conf=clamp(0.72*base_conf+0.28*(0.50+0.42*agreement))
+    # Small regime-aware correction: extreme disagreement is kept near neutral.
+    if spread>0.55:
+        base_prob=0.5+0.82*(base_prob-0.5)
+    elif spread>0.35:
+        base_prob=0.5+0.92*(base_prob-0.5)
+    why="；".join(f"{k}:{preds[k].prob_up:.1%}(权重{ws[k]:.2f})" for k in preds)
+    reason=f"动态加权汇总：{why}；分析师分歧={spread:.1%}；综合判断{direction_text(base_prob)}"
+    return Prediction(clamp(base_prob,0.08,0.92),reason,conf)
