@@ -1,5 +1,6 @@
 import json, os, re, urllib.parse, urllib.request, xml.etree.ElementTree as ET, time
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 def _get(url,timeout=12):
     req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 sse-agents/1.0"})
     with urllib.request.urlopen(req,timeout=timeout) as r:return r.read()
@@ -35,7 +36,7 @@ def _freshness_weight(dt,now=None,half_life_hours=36):
 def google_news(query,limit=12,max_age_days=14,cutoff=None):
     try:
         url="https://news.google.com/rss/search?"+urllib.parse.urlencode({"q":query,"hl":"zh-CN","gl":"CN","ceid":"CN:zh-Hans"})
-        root=ET.fromstring(_get(url));now=datetime.now(timezone.utc);items=[]
+        root=ET.fromstring(_get(url));now=cutoff or datetime.now(timezone.utc);items=[]
         for x in root.findall("./channel/item"):
             title=x.findtext("title");link=x.findtext("link");pub=_parse_dt(x.findtext("pubDate"));clean=_clean_title(title)
             if not clean:continue
@@ -81,7 +82,7 @@ def _collect_news(queries,limit=12,require_any=None,exclude_any=None,cutoff=None
 def build_context(as_of_date=None):
     cutoff=None
     if as_of_date:
-        cutoff=datetime.strptime(str(as_of_date)[:10],"%Y-%m-%d").replace(hour=23,minute=59,second=59,tzinfo=timezone.utc)
+        cutoff=datetime.strptime(str(as_of_date)[:10],"%Y-%m-%d").replace(hour=23,minute=59,second=59,tzinfo=ZoneInfo("Asia/Shanghai")).astimezone(timezone.utc)
     overseas={};symbols={"标普500":"^GSPC","纳斯达克":"^IXIC","恒生指数":"^HSI","美元人民币":"CNY=X"}
     for k,sym in symbols.items():
         r=yahoo_return(sym,as_of_date=as_of_date)
