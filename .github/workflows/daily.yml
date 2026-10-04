@@ -26,9 +26,6 @@ jobs:
       - run: pip install -r requirements.txt
 
       - name: Run agents
-        env:
-          OPENAI_API_KEY: \${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: \${{ vars.OPENAI_MODEL }}
         run: python run_daily.py
 
       - name: Generate dashboard
@@ -44,6 +41,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sse-state-\${{ github.run_number }}
+          name: sse-state-${{ github.run_number }}
           path: data/sse.db
           retention-days: 30
