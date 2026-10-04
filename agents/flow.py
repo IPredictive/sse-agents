@@ -1,16 +1,31 @@
-import pandas as pd
-from .ai import call_llm
+import numpy as np
 from .base import Agent, Prediction
+from .quant import clamp, confidence_from_score, direction_text, sigmoid
 
 class FlowAgent(Agent):
     name="flow"
+
     def predict(self,df,context=None):
-        if len(df)<30:return None
-        c=df.close.astype(float); v=df.volume.astype(float); ret=c.pct_change()
-        payload={"latest_close":float(c.iloc[-1]),"volume_ratio_20d":float(v.iloc[-1]/v.rolling(20).mean().iloc[-1]),
-                 "return_5d":float(c.pct_change(5).iloc[-1]),"return_20d":float(c.pct_change(20).iloc[-1]),
-                 "avg_return_5d":float(ret.tail(5).mean())}
-        out=call_llm("资金流与量价分析师","分析成交量、量价关系和短中期动量，判断下一交易日上涨概率。",payload)
-        if out:
-            p,conf,reason=out; return Prediction(p,"AI："+reason,conf)
-        return Prediction(0.5,"AI未配置，资金流分析暂不可用",0.0)
+        if len(df)<40:return None
+        c=df.close.astype(float); v=df.volume.astype(float)
+        ret=c.pct_change()
+        vol20=float(v.rolling(20).mean().iloc[-1])
+        vr=float(v.iloc[-1]/vol20) if vol20 else 1.0
+        vr5=float(v.tail(5).mean()/vol20) if vol20 else 1.0
+        up_vol=float(v[ret>0].tail(20).mean()) if (ret>0).tail(20).any() else vol20
+        down_vol=float(v[ret<0].tail(20).mean()) if (ret<0).tail(20).any() else vol20
+        pressure=(up_vol-down_vol)/(up_vol+down_vol or 1)
+        ret5=float(c.pct_change(5).iloc[-1]); ret20=float(c.pct_change(20).iloc[-1])
+        up_days=int((ret.tail(10)>0).sum())
+        score=0.0
+        score += 0.95*clamp((vr-1)/0.6,-1,1)
+        score += 0.70*clamp((vr5-1)/0.5,-1,1)
+        score += 1.00*clamp(pressure/0.25,-1,1)
+        score += 0.65*clamp(ret5/0.04,-1,1)
+        score += 0.40*clamp(ret20/0.10,-1,1)
+        score += 0.35*((up_days-5)/5)
+        p=clamp(sigmoid(score*0.65),0.08,0.92)
+        conf=confidence_from_score(score,0.9 if 0.75<vr<1.35 else 1.0)
+        reason=(f"量价{direction_text(p)}；当日量比20日={vr:.2f}，5日均量比={vr5:.2f}；"
+                f"涨跌量能差={pressure:+.2f}；5日动量={ret5:.1%}；近10日上涨{up_days}天")
+        return Prediction(p,reason,conf)
