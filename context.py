@@ -1,10 +1,21 @@
-import json, os, urllib.parse, urllib.request, xml.etree.ElementTree as ET, time
+import json, os, re, urllib.parse, urllib.request, xml.etree.ElementTree as ET, time
+from datetime import datetime, timezone
 def _get(url,timeout=12):
     req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 sse-agents/1.0"})
     with urllib.request.urlopen(req,timeout=timeout) as r:return r.read()
-def google_news(query,limit=12):
+def google_news(query,limit=12,max_age_days=14):
     try:
-        url="https://news.google.com/rss/search?"+urllib.parse.urlencode({"q":query,"hl":"zh-CN","gl":"CN","ceid":"CN:zh-Hans"});root=ET.fromstring(_get(url));return [x.text for x in root.findall("./channel/item/title")[:limit] if x.text]
+        url="https://news.google.com/rss/search?"+urllib.parse.urlencode({"q":query,"hl":"zh-CN","gl":"CN","ceid":"CN:zh-Hans"})
+        root=ET.fromstring(_get(url));now=datetime.now(timezone.utc);items=[]
+        for x in root.findall("./channel/item"):
+            title=x.findtext("title");link=x.findtext("link");pub=_parse_dt(x.findtext("pubDate"));clean=_clean_title(title)
+            if not clean:continue
+            if pub and (now-pub).total_seconds()>max_age_days*86400:continue
+            if any(bad in clean for bad in ("股票股价","行情_走势图_资讯","股价_行情_走势图","搜索结果")):continue
+            if any(_norm_title(clean)==_norm_title(old["title"]) or _similar(_norm_title(clean),_norm_title(old["title"]))>=0.78 for old in items):continue
+            items.append({"title":clean,"published_at":pub.isoformat() if pub else None,"freshness_weight":round(_freshness_weight(pub,now),4),"link":link})
+            if len(items)>=limit:break
+        return items
     except Exception as e:print("news fetch skipped:",e);return []
 def yahoo_return(symbol,days=3):
     try:
@@ -15,8 +26,9 @@ def build_context():
     for k,s in symbols.items():
         r=yahoo_return(s)
         if r is not None:overseas[k]=r
-    return {"news_titles":google_news("上证指数 OR A股 OR 沪深股市"),"macro_titles":google_news("中国 央行 OR 国务院 OR 财政政策 OR 货币政策 OR 宏观经济 股市"),"overseas":overseas}
-
+    news_items=google_news("上证指数 OR A股 OR 沪深股市")
+    macro_items=google_news("中国 央行 OR 国务院 OR 财政政策 OR 货币政策 OR 宏观经济 股市")
+    return {"news_items":news_items,"macro_items":macro_items,"news_titles":[x["title"] for x in news_items],"macro_titles":[x["title"] for x in macro_items],"overseas":overseas}
 
 def llm_news_score(titles, role):
     """可选 LLM 层：没有 OPENAI_API_KEY 时返回 None，不影响规则 Agent。"""
