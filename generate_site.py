@@ -1,6 +1,9 @@
 import html
+import json
 from pathlib import Path
+
 from db import init_db, load_daily, load_predictions, load_scored
+from ensemble import BASE_WEIGHTS, evidence_quality, adaptive_weights, stabilize_extreme
 
 OUT = Path(__file__).parent / "site" / "index.html"
 
@@ -45,13 +48,50 @@ def bar_width(p):
     return max(4, min(96, float(p) * 100))
 
 
+def esc_json(obj):
+    return json.dumps(obj, ensure_ascii=False).replace("</", "<\/")
+
+
+def make_line_svg(values, width=900, height=260, pct_axis=False):
+    if not values:
+        return "<div class='empty-chart'>暂无足够历史数据</div>"
+    vals = [float(v) for v in values]
+    lo, hi = min(vals), max(vals)
+    if hi - lo < 1e-9:
+        lo -= 1
+        hi += 1
+    pad_x, pad_y = 44, 24
+    inner_w, inner_h = width - 2 * pad_x, height - 2 * pad_y
+    points = []
+    for i, v in enumerate(vals):
+        x = pad_x + inner_w * (i / max(1, len(vals) - 1))
+        y = pad_y + inner_h * (1 - (v - lo) / (hi - lo))
+        points.append((x, y))
+    poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in points)
+    area = f"{pad_x},{height-pad_y} " + poly + f" {width-pad_x},{height-pad_y}"
+    last_x, last_y = points[-1]
+    last = vals[-1]
+    label = f"{last:.1%}" if pct_axis else f"{last:.4f}"
+    return f"""<svg class="line-svg" viewBox="0 0 {width} {height}" role="img">
+      <defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-opacity=".25"/><stop offset="100%" stop-opacity="0"/>
+      </linearGradient></defs>
+      <line x1="{pad_x}" y1="{pad_y}" x2="{pad_x}" y2="{height-pad_y}" class="axis"/>
+      <line x1="{pad_x}" y1="{height-pad_y}" x2="{width-pad_x}" y2="{height-pad_y}" class="axis"/>
+      <polygon points="{area}" class="area"/>
+      <polyline points="{poly}" class="line"/>
+      <circle cx="{last_x:.1f}" cy="{last_y:.1f}" r="4.5" class="point"/>
+      <text x="{last_x:.1f}" y="{max(16,last_y-10):.1f}" class="value-label">{html.escape(label)}</text>
+    </svg>"""
+
+
 def main():
     init_db()
     d = load_daily()
     p = load_predictions()
     s = load_scored()
 
-    latest = p.base_date.max() if not p.empty else "-"
+    latest = p.base_date.max() if not p.empty else (d.date.iloc[-1] if not d.empty else "-")
     rows = p[p.base_date == latest] if not p.empty else p
 
     chief = rows[rows.agent == "CHIEF_ANALYST"]
@@ -66,10 +106,56 @@ def main():
     prev = float(d.close.iloc[-2]) if len(d) > 1 else price
     change = (price / prev - 1) if price and prev else None
 
-    analysts = [
-        r for _, r in rows.iterrows()
-        if r.agent not in ("CHIEF_ANALYST", "ENSEMBLE")
-    ]
+    # --- Analyst signals ---
+    analyst_order = ["technical", "flow", "macro", "sentiment", "overseas"]
+    names_cn = {
+        "technical": "技术面",
+        "flow": "资金面",
+        "macro": "政策面",
+        "sentiment": "市场情绪",
+        "overseas": "海外环境",
+    }
+    analyst_rows = {str(r.agent): r for _, r in rows.iterrows()}
+    analysts = [analyst_rows[k] for k in analyst_order if k in analyst_rows]
+
+    # --- Decision breakdown: reproduce ensemble's weighting inputs ---
+    preds = {k: analyst_rows[k] for k in analyst_order if k in analyst_rows}
+    weights = adaptive_weights({
+        k: type("Pred", (), {
+            "confidence": float(v.confidence),
+            "prob_up": float(v.prob_up)
+        })() for k, v in preds.items()
+    })
+    quality = {}
+    adjusted = {}
+    for k, r in preds.items():
+        pred_obj = type("Pred", (), {
+            "confidence": float(r.confidence),
+            "prob_up": float(r.prob_up)
+        })()
+        quality[k] = evidence_quality(pred_obj, k, {})
+        adjusted[k] = stabilize_extreme(float(r.prob_up), quality[k])
+        weights[k] *= 0.78 + 0.42 * quality[k]
+
+    total_w = sum(weights.values()) or 1.0
+    contributions = {
+        k: adjusted[k] * weights[k] / total_w for k in preds
+    }
+    weighted_base = sum(contributions.values())
+    simple_average = sum(float(r.prob_up) for r in preds.values()) / len(preds) if preds else 0.5
+
+    signal_cards = ""
+    for k in analyst_order:
+        if k not in analyst_rows:
+            continue
+        r = analyst_rows[k]
+        p_up = float(r.prob_up)
+        signal_cards += f"""
+        <div class="signal-row">
+          <div class="signal-name"><span class="signal-dot {tone(p_up)}"></span>{names_cn[k]}</div>
+          <div class="signal-track"><span class="{tone(p_up)}" style="width:{bar_width(p_up):.1f}%"></span><i></i></div>
+          <div class="signal-value {tone(p_up)}">{pct(p_up)}</div>
+        </div>"""
 
     cards = ""
     for r in analysts:
@@ -78,19 +164,38 @@ def main():
         t = tone(p_up)
         cards += f"""
         <article class="analyst-card {t}">
-          <div class="analyst-head">
-            <span class="agent-dot"></span>
-            <span class="aname">{html.escape(str(r.agent)).upper()}</span>
-          </div>
+          <div class="analyst-head"><span class="agent-dot"></span><span class="aname">{html.escape(str(r.agent)).upper()}</span></div>
           <div class="analyst-prob">{pct(p_up)}</div>
           <div class="mini-track"><span style="width:{bar_width(p_up):.1f}%"></span></div>
-          <div class="analyst-meta">
-            <span>上涨概率</span><strong>信心 {pct(conf_a)}</strong>
-          </div>
+          <div class="analyst-meta"><span>{direction_text(p_up)}</span><strong>信心 {pct(conf_a)}</strong></div>
           <p>{html.escape(str(r.reason))}</p>
-        </article>
-        """
+        </article>"""
 
+    # --- Price chart data ---
+    recent60 = d.tail(60)
+    price_svg = make_line_svg(recent60.close.tolist() if not recent60.empty else [], pct_axis=False)
+    price_dates = recent60.date.tolist() if not recent60.empty else []
+    price_values = recent60.close.tolist() if not recent60.empty else []
+    first60 = float(price_values[0]) if price_values else price
+    last60 = float(price_values[-1]) if price_values else price
+    ret60 = (last60 / first60 - 1) if first60 and last60 else 0
+    recent20 = d.tail(20)
+    first20 = float(recent20.close.iloc[0]) if not recent20.empty else price
+    last20 = float(recent20.close.iloc[-1]) if not recent20.empty else price
+    ret20 = (last20 / first20 - 1) if first20 and last20 else 0
+
+    # --- Performance trend: rolling 10-prediction accuracy and Brier ---
+    perf_dates, perf_acc, perf_brier = [], [], []
+    if not s.empty:
+        for i in range(len(s)):
+            window = s.iloc[max(0, i - 9):i + 1]
+            perf_dates.append(str(s.iloc[i].base_date))
+            perf_acc.append(float(window.correct.mean()))
+            perf_brier.append(float(window.brier.mean()))
+    acc_svg = make_line_svg(perf_acc[-60:], pct_axis=True)
+    brier_svg = make_line_svg(perf_brier[-60:], pct_axis=False)
+
+    # --- Historical table ---
     history = ""
     if not s.empty:
         for agent, g in s.groupby("agent"):
@@ -109,201 +214,82 @@ def main():
     change_cls = "up" if change is not None and change >= 0 else "down"
 
     html_doc = f"""<!doctype html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080b12">
 <title>狮城胖叔·上证分析台</title>
 <style>
-:root {{
-  --bg:#080b12; --panel:#10151f; --panel2:#141b28; --line:#222c3d;
-  --text:#f4f7fb; --muted:#8d98aa; --soft:#c5cedc; --green:#42d392;
-  --red:#ff6576; --blue:#7aa2ff; --gold:#f4c95d;
-}}
-* {{ box-sizing:border-box }}
-body {{
-  margin:0; color:var(--text); background:
-  radial-gradient(circle at 80% -10%, rgba(91,118,255,.18), transparent 32%),
-  radial-gradient(circle at 10% 15%, rgba(66,211,146,.07), transparent 25%),
-  var(--bg);
-  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-}}
-.wrap {{ max-width:1240px; margin:auto; padding:30px 20px 64px }}
-.top {{
-  display:flex; justify-content:space-between; align-items:flex-end; gap:24px;
-  padding:8px 2px 28px;
-}}
-.brand {{ display:flex; gap:14px; align-items:center }}
-.logo {{
-  width:48px; height:48px; display:grid; place-items:center; border-radius:15px;
-  background:linear-gradient(145deg,#1b2740,#101827); border:1px solid #2c3a55;
-  box-shadow:0 10px 30px rgba(0,0,0,.25); font-size:24px;
-}}
-h1 {{ margin:0 0 5px; font-size:28px; letter-spacing:-.03em }}
-h2 {{ margin:0 0 18px; font-size:17px }}
-.muted {{ color:var(--muted); font-size:13px }}
-.date-pill {{
-  border:1px solid var(--line); background:rgba(16,21,31,.75); color:var(--soft);
-  border-radius:999px; padding:9px 13px; font-size:12px; white-space:nowrap;
-}}
-.grid {{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px }}
-.card {{
-  background:linear-gradient(180deg,rgba(20,27,40,.94),rgba(13,18,27,.94));
-  border:1px solid var(--line); border-radius:18px; padding:20px;
-  box-shadow:0 16px 42px rgba(0,0,0,.18);
-}}
-.metric-label {{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.06em }}
-.big {{ font-size:32px; font-weight:800; letter-spacing:-.04em; margin:10px 0 5px }}
-.sub {{ color:var(--soft); font-size:12px }}
-.up {{ color:var(--green) }} .down {{ color:var(--red) }}
-.chief {{
-  margin-top:14px; overflow:hidden; position:relative;
-  background:
-    radial-gradient(circle at 90% 10%, rgba(122,162,255,.16), transparent 30%),
-    linear-gradient(135deg,#141d30,#0e141f);
-  border-color:#2c3d5e;
-}}
-.chief::after {{
-  content:""; position:absolute; width:180px; height:180px; right:-70px; bottom:-90px;
-  border:1px solid rgba(122,162,255,.16); border-radius:50%;
-}}
-.chief-top {{ display:flex; justify-content:space-between; align-items:center; gap:16px }}
-.kicker {{
-  display:inline-flex; align-items:center; gap:7px; color:#b9c7e4; font-size:12px;
-  border:1px solid #30415f; background:rgba(35,49,78,.45); border-radius:999px; padding:6px 10px;
-}}
-.kicker-dot {{ width:6px; height:6px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold) }}
-.chiefrow {{ display:grid; grid-template-columns:250px 1fr; gap:28px; align-items:center; margin-top:20px }}
-.prob {{ font-size:62px; line-height:1; font-weight:850; letter-spacing:-.06em }}
-.chief-direction {{ margin-top:9px; font-size:15px; font-weight:700 }}
-.reason {{ color:#d8dfeb; font-size:14px; line-height:1.85; max-width:760px }}
-.conf-row {{ margin-top:14px; display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px }}
-.conf-track,.mini-track {{ height:6px; background:#202a3a; border-radius:999px; overflow:hidden }}
-.conf-track {{ width:150px }}
-.conf-track span {{ display:block; height:100%; width:{bar_width(conf):.1f}%; background:linear-gradient(90deg,#5f8cff,#7aa2ff); border-radius:inherit }}
-.section {{ margin-top:28px }}
-.section-title {{ display:flex; justify-content:space-between; align-items:end; margin-bottom:14px }}
-.section-title .hint {{ color:var(--muted); font-size:12px }}
-.analysts {{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px }}
-.analyst-card {{
-  min-width:0; background:rgba(16,21,31,.92); border:1px solid var(--line);
-  border-radius:16px; padding:16px; transition:transform .2s ease,border-color .2s ease;
-}}
-.analyst-card:hover {{ transform:translateY(-2px); border-color:#34445e }}
-.analyst-head {{ display:flex; align-items:center; gap:8px }}
-.agent-dot {{ width:7px; height:7px; border-radius:50%; background:#7f8ba0 }}
-.bull .agent-dot {{ background:var(--green); box-shadow:0 0 10px rgba(66,211,146,.5) }}
-.bear .agent-dot {{ background:var(--red); box-shadow:0 0 10px rgba(255,101,118,.45) }}
-.aname {{ color:#aeb9cb; font-size:11px; letter-spacing:.09em; font-weight:800 }}
-.analyst-prob {{ font-size:29px; font-weight:800; margin:14px 0 9px; letter-spacing:-.04em }}
-.mini-track span {{ display:block; height:100%; border-radius:inherit; background:#65738a }}
-.bull .mini-track span {{ background:var(--green) }}
-.bear .mini-track span {{ background:var(--red) }}
-.analyst-meta {{ display:flex; justify-content:space-between; margin-top:8px; color:var(--muted); font-size:11px }}
-.analyst-meta strong {{ color:#b8c2d2; font-weight:600 }}
-.analyst-card p {{ color:#aeb8c8; font-size:12px; line-height:1.65; margin:13px 0 0 }}
-.table-wrap {{ overflow:auto }}
-table {{ width:100%; border-collapse:collapse; min-width:560px }}
-th,td {{ padding:12px 10px; border-bottom:1px solid var(--line); text-align:left; font-size:13px }}
-th {{ color:var(--muted); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em }}
-td {{ color:#d6deea }}
-.table-agent {{ font-weight:700; color:#eef2ff }}
-.footer {{ margin-top:28px; display:flex; justify-content:space-between; gap:12px; color:#68758a; font-size:11px }}
-@media(max-width:980px) {{
-  .analysts {{ grid-template-columns:repeat(2,1fr) }}
-  .chiefrow {{ grid-template-columns:190px 1fr }}
-}}
-@media(max-width:700px) {{
-  .wrap {{ padding:20px 14px 45px }}
-  .top {{ align-items:flex-start; flex-direction:column; padding-bottom:20px }}
-  h1 {{ font-size:24px }}
-  .grid {{ grid-template-columns:1fr }}
-  .chiefrow {{ grid-template-columns:1fr; gap:18px }}
-  .prob {{ font-size:52px }}
-  .analysts {{ grid-template-columns:1fr }}
-  .footer {{ flex-direction:column }}
-}}
-</style>
-</head>
-<body>
-<main class="wrap">
-  <header class="top">
-    <div class="brand">
-      <div class="logo">📈</div>
-      <div>
-        <h1>狮城胖叔·上证分析台</h1>
-        <div class="muted">量化数据 · 多维信号 · 每日自动更新</div>
-      </div>
-    </div>
-    <div class="date-pill">分析基准日 · {html.escape(str(latest))}</div>
-  </header>
+:root{{--bg:#080b12;--panel:#10151f;--panel2:#141b28;--line:#222c3d;--text:#f4f7fb;--muted:#8d98aa;--soft:#c5cedc;--green:#42d392;--red:#ff6576;--blue:#7aa2ff;--gold:#f4c95d}}
+*{{box-sizing:border-box}}body{{margin:0;color:var(--text);background:radial-gradient(circle at 80% -10%,rgba(91,118,255,.18),transparent 32%),radial-gradient(circle at 10% 15%,rgba(66,211,146,.07),transparent 25%),var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}}
+.wrap{{max-width:1240px;margin:auto;padding:30px 20px 64px}}.top{{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:8px 2px 28px}}.brand{{display:flex;gap:14px;align-items:center}}.logo{{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(145deg,#1b2740,#101827);border:1px solid #2c3a55;font-size:24px}}h1{{margin:0 0 5px;font-size:28px;letter-spacing:-.03em}}h2{{margin:0;font-size:17px}}.muted{{color:var(--muted);font-size:13px}}.date-pill{{border:1px solid var(--line);background:rgba(16,21,31,.75);color:var(--soft);border-radius:999px;padding:9px 13px;font-size:12px;white-space:nowrap}}
+.grid{{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}}.card{{background:linear-gradient(180deg,rgba(20,27,40,.94),rgba(13,18,27,.94));border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 16px 42px rgba(0,0,0,.18)}}.metric-label{{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}}.big{{font-size:32px;font-weight:800;letter-spacing:-.04em;margin:10px 0 5px}}.sub{{color:var(--soft);font-size:12px}}.up{{color:var(--green)}}.down{{color:var(--red)}}.neutral{{color:#aab4c4}}
+.chief{{margin-top:14px;overflow:hidden;position:relative;background:radial-gradient(circle at 90% 10%,rgba(122,162,255,.16),transparent 30%),linear-gradient(135deg,#141d30,#0e141f);border-color:#2c3d5e}}.chief-top{{display:flex;justify-content:space-between;align-items:center;gap:16px}}.kicker{{display:inline-flex;align-items:center;gap:7px;color:#b9c7e4;font-size:12px;border:1px solid #30415f;background:rgba(35,49,78,.45);border-radius:999px;padding:6px 10px}}.kicker-dot{{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}}.chiefrow{{display:grid;grid-template-columns:250px 1fr;gap:28px;align-items:center;margin-top:20px}}.prob{{font-size:62px;line-height:1;font-weight:850;letter-spacing:-.06em}}.chief-direction{{margin-top:9px;font-size:15px;font-weight:700}}.reason{{color:#d8dfeb;font-size:14px;line-height:1.85;max-width:820px}}.conf-row{{margin-top:14px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}}.conf-track,.mini-track{{height:6px;background:#202a3a;border-radius:999px;overflow:hidden}}.conf-track{{width:150px}}.conf-track span{{display:block;height:100%;width:{bar_width(conf):.1f}%;background:linear-gradient(90deg,#5f8cff,#7aa2ff);border-radius:inherit}}
+.section{{margin-top:28px}}.section-title{{display:flex;justify-content:space-between;align-items:end;margin-bottom:14px}}.section-title .hint{{color:var(--muted);font-size:12px}}
+.chart-card{{padding:20px}}.chart-head{{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:10px}}.chart-title{{font-size:17px;font-weight:750}}.chart-desc{{color:var(--muted);font-size:12px;margin-top:5px;line-height:1.5}}.chart-stats{{display:flex;gap:18px;flex-wrap:wrap}}.chart-stat b{{font-size:17px}}.chart-stat span{{display:block;color:var(--muted);font-size:10px;margin-top:3px}}.line-svg{{width:100%;height:auto;display:block;margin-top:4px}}.axis{{stroke:#293346;stroke-width:1}}.line{{fill:none;stroke:#7aa2ff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}}.area{{fill:url(#areaGrad)}}.point{{fill:#7aa2ff;stroke:#0e141f;stroke-width:3}}.value-label{{fill:#dce6fa;font-size:12px;font-weight:700;text-anchor:middle}}.empty-chart{{height:220px;display:grid;place-items:center;color:var(--muted)}}
+.signal-panel{{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}}.signal-list{{display:flex;flex-direction:column;gap:17px;padding-top:4px}}.signal-row{{display:grid;grid-template-columns:92px 1fr 55px;gap:12px;align-items:center}}.signal-name{{font-size:12px;color:#c8d1df}}.signal-dot{{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;background:#7f8ba0}}.signal-dot.bull{{background:var(--green)}}.signal-dot.bear{{background:var(--red)}}.signal-track{{height:9px;background:#202a3a;border-radius:999px;position:relative;overflow:visible}}.signal-track span{{position:absolute;left:0;top:0;height:100%;border-radius:999px;background:#69768b}}.signal-track span.bull{{background:var(--green)}}.signal-track span.bear{{background:var(--red)}}.signal-track i{{position:absolute;left:50%;top:-4px;height:17px;width:1px;background:#566175}}.signal-value{{text-align:right;font-weight:800;font-size:13px}}
+.gauge{{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}}.gauge-ring{{width:180px;height:90px;border:15px solid #263144;border-bottom:0;border-radius:180px 180px 0 0;position:relative;overflow:hidden}}.gauge-fill{{position:absolute;left:-15px;bottom:-15px;width:180px;height:90px;border:15px solid transparent;border-top-color:#7aa2ff;border-radius:180px 180px 0 0;transform-origin:50% 100%;transform:rotate({(-90 + (prob or .5)*180):.1f}deg)}}.gauge-center{{margin-top:-3px;text-align:center}}.gauge-center b{{font-size:27px}}.gauge-center span{{display:block;color:var(--muted);font-size:11px;margin-top:3px}}
+.breakdown{{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}}.break-item{{padding:12px;border:1px solid var(--line);border-radius:12px;background:#0d131d}}.break-top{{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}}.break-top strong{{color:#dce4f0}}.break-num{{font-size:18px;font-weight:800;margin-top:6px}}.break-bar{{height:5px;background:#202a3a;border-radius:99px;margin-top:7px;overflow:hidden}}.break-bar span{{display:block;height:100%;background:#657fae;border-radius:inherit}}
+.analysts{{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}}.analyst-card{{min-width:0;background:rgba(16,21,31,.92);border:1px solid var(--line);border-radius:16px;padding:16px}}.analyst-head{{display:flex;align-items:center;gap:8px}}.agent-dot{{width:7px;height:7px;border-radius:50%;background:#7f8ba0}}.bull .agent-dot{{background:var(--green);box-shadow:0 0 10px rgba(66,211,146,.5)}}.bear .agent-dot{{background:var(--red);box-shadow:0 0 10px rgba(255,101,118,.45)}}.aname{{color:#aeb9cb;font-size:11px;letter-spacing:.09em;font-weight:800}}.analyst-prob{{font-size:29px;font-weight:800;margin:14px 0 9px;letter-spacing:-.04em}}.mini-track span{{display:block;height:100%;border-radius:inherit;background:#65738a}.bull .mini-track span{{background:var(--green)}}.bear .mini-track span{{background:var(--red)}}.analyst-meta{{display:flex;justify-content:space-between;margin-top:8px;color:var(--muted);font-size:11px}}.analyst-meta strong{{color:#b8c2d2;font-weight:600}}.analyst-card p{{color:#aeb8c8;font-size:12px;line-height:1.65;margin:13px 0 0}}
+.table-wrap{{overflow:auto}}table{{width:100%;border-collapse:collapse;min-width:560px}}th,td{{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}}th{{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}}td{{color:#d6deea}}.table-agent{{font-weight:700;color:#eef2ff}}.footer{{margin-top:28px;display:flex;justify-content:space-between;gap:12px;color:#68758a;font-size:11px}}
+@media(max-width:980px){{.analysts{{grid-template-columns:repeat(2,1fr)}}.chiefrow,.signal-panel{{grid-template-columns:1fr}}}}@media(max-width:700px){{.wrap{{padding:20px 14px 45px}}.top{{align-items:flex-start;flex-direction:column;padding-bottom:20px}}h1{{font-size:24px}}.grid{{grid-template-columns:1fr}}.chiefrow{{grid-template-columns:1fr;gap:18px}}.prob{{font-size:52px}}.analysts{{grid-template-columns:1fr}}.footer{{flex-direction:column}}.signal-row{{grid-template-columns:78px 1fr 48px}}}}
+</style></head>
+<body><main class="wrap">
 
-  <section class="grid">
-    <div class="card">
-      <div class="metric-label">上证指数 · Latest Close</div>
-      <div class="big">{price_text}</div>
-      <div class="sub {change_cls}">{change_text} <span style="color:var(--muted)">较前一交易日</span></div>
-    </div>
-    <div class="card">
-      <div class="metric-label">Chief Analyst · Upside Probability</div>
-      <div class="big {chief_tone}">{prob_text}</div>
-      <div class="sub">{direction} · 下一交易日</div>
-    </div>
-    <div class="card">
-      <div class="metric-label">Model Confidence</div>
-      <div class="big">{conf_text}</div>
-      <div class="conf-row"><span>综合信心</span><div class="conf-track"><span></span></div></div>
-    </div>
-  </section>
+<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>狮城胖叔·上证分析台</h1><div class="muted">量化数据 · 多维信号 · 每日自动更新</div></div></div><div class="date-pill">分析基准日 · {html.escape(str(latest))}</div></header>
 
-  <section class="card chief">
-    <div class="chief-top">
-      <div>
-        <div class="kicker"><span class="kicker-dot"></span> CHIEF ANALYST · FINAL CALL</div>
-      </div>
-      <div class="muted">面向下一交易日</div>
-    </div>
-    <div class="chiefrow">
-      <div>
-        <div class="prob {chief_tone}">{prob_text}</div>
-        <div class="chief-direction">{direction}</div>
-      </div>
-      <div>
-        <div class="reason">{html.escape(reason)}</div>
-        <div class="conf-row">模型信心 {conf_text}<div class="conf-track"><span></span></div></div>
-      </div>
-    </div>
-  </section>
+<section class="grid">
+<div class="card"><div class="metric-label">上证指数 · Latest Close</div><div class="big">{price_text}</div><div class="sub {change_cls}">{change_text} <span style="color:var(--muted)">较前一交易日</span></div></div>
+<div class="card"><div class="metric-label">Chief Analyst · Upside Probability</div><div class="big {chief_tone}">{prob_text}</div><div class="sub">{direction} · 下一交易日</div></div>
+<div class="card"><div class="metric-label">Model Confidence</div><div class="big">{conf_text}</div><div class="conf-row"><span>综合信心</span><div class="conf-track"><span></span></div></div></div>
+</section>
 
-  <section class="section">
-    <div class="section-title">
-      <h2>五位智能分析师</h2>
-      <span class="hint">独立信号 → 动态加权 → Chief Analyst</span>
-    </div>
-    <div class="analysts">{cards}</div>
-  </section>
+<section class="card chief">
+<div class="chief-top"><div class="kicker"><span class="kicker-dot"></span> CHIEF ANALYST · FINAL CALL</div><div class="muted">面向下一交易日</div></div>
+<div class="chiefrow"><div><div class="prob {chief_tone}">{prob_text}</div><div class="chief-direction">{direction}</div></div><div><div class="reason">{html.escape(reason)}</div><div class="conf-row">模型信心 {conf_text}<div class="conf-track"><span></span></div></div></div></div>
+</section>
 
-  <section class="section card">
-    <div class="section-title">
-      <h2>历史战绩</h2>
-      <span class="hint">已结算预测</span>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <tr><th>分析师</th><th>样本</th><th>方向准确率</th><th>Brier</th></tr>
-        {history or '<tr><td colspan="4">暂无已结算样本</td></tr>'}
-      </table>
-    </div>
-  </section>
+<section class="section card chart-card">
+<div class="chart-head"><div><div class="chart-title">上证指数走势</div><div class="chart-desc">最近 60 个交易日 · 最近 20 日区间表现同步显示</div></div><div class="chart-stats"><div class="chart-stat"><b>{ret20:+.2%}</b><span>20 日</span></div><div class="chart-stat"><b>{ret60:+.2%}</b><span>60 日</span></div></div></div>
+{price_svg}
+</section>
 
-  <footer class="footer">
-    <span>狮城胖叔·上证分析台</span>
-    <span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span>
-  </footer>
-</main>
-</body>
-</html>"""
+<section class="section card">
+<div class="section-title"><h2>五位分析师信号</h2><span class="hint">50% = 中性基线</span></div>
+<div class="signal-panel"><div class="signal-list">{signal_cards}</div>
+<div class="gauge"><div class="gauge-ring"><div class="gauge-fill"></div></div><div class="gauge-center"><b class="{chief_tone}">{prob_text}</b><span>Chief Analyst 综合概率</span></div></div></div>
+</section>
+
+<section class="section card">
+<div class="section-title"><h2>多空力量仪表盘</h2><span class="hint">五维独立信号</span></div>
+<div class="signal-panel"><div class="signal-list">{signal_cards}</div>
+<div class="gauge"><div class="gauge-ring"><div class="gauge-fill"></div></div><div class="gauge-center"><b class="{chief_tone}">{direction}</b><span>综合方向判断</span></div></div></div>
+</section>
+
+<section class="section card">
+<div class="section-title"><h2>Chief Analyst 决策拆解</h2><span class="hint">动态权重 + 证据质量 + 极端值稳定化</span></div>
+<div class="breakdown">
+{''.join(f"<div class='break-item'><div class='break-top'><span>{names_cn[k]}</span><strong>权重 {weights[k]:.2f}</strong></div><div class='break-num {tone(preds[k].prob_up)}'>{pct(preds[k].prob_up)}</div><div class='break-bar'><span style='width:{bar_width(contributions[k]):.1f}%'></span></div><div class='break-top' style='margin-top:6px'><span>证据质量 {quality[k]:.0%}</span><span>贡献 {contributions[k]:.1%}</span></div></div>" for k in preds)}
+</div>
+<div class="reason" style="margin-top:16px">简单平均为 <b>{pct(simple_average)}</b>；经过各分析师历史表现、置信度、证据质量及分歧处理后，动态加权基准为 <b>{pct(weighted_base)}</b>。最终 Chief Analyst 为 <b>{prob_text}</b>，并根据不同信号分组的交叉验证结果进行调整。{html.escape(reason)}</div>
+</section>
+
+<section class="section">
+<div class="section-title"><h2>五位智能分析师</h2><span class="hint">独立信号 → 动态加权 → Chief Analyst</span></div>
+<div class="analysts">{cards}</div>
+</section>
+
+<section class="section card chart-card">
+<div class="chart-head"><div><div class="chart-title">历史预测表现</div><div class="chart-desc">滚动 10 个已结算预测 · 越高越好（准确率）· 越低越好（Brier）</div></div></div>
+<div class="perf-grid"><div><div class="perf-label">方向准确率</div>{acc_svg}</div><div><div class="perf-label">Brier Score</div>{brier_svg}</div></div>
+</section>
+
+<section class="section card">
+<div class="section-title"><h2>历史战绩</h2><span class="hint">已结算预测</span></div>
+<div class="table-wrap"><table><tr><th>分析师</th><th>样本</th><th>方向准确率</th><th>Brier</th></tr>{history or '<tr><td colspan="4">暂无已结算样本</td></tr>'}</table></div>
+</section>
+
+<footer class="footer"><span>狮城胖叔·上证分析台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
+</main></body></html>"""
+
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html_doc, encoding="utf-8")
 
