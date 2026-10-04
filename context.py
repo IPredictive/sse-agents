@@ -50,23 +50,46 @@ def yahoo_return(symbol,days=3):
     try:
         end=int(time.time());start=end-days*86400;url=f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?period1={start}&period2={end}&interval=1d";o=json.loads(_get(url));c=o["chart"]["result"][0]["indicators"]["quote"][0]["close"];c=[x for x in c if x is not None];return c[-1]/c[-2]-1 if len(c)>=2 else None
     except Exception as e:print(f"Yahoo {symbol} skipped:",e);return None
+def _collect_news(queries,limit=12,require_any=None,exclude_any=None):
+    items=[];seen=set()
+    for q in queries:
+        for item in google_news(q,limit=8):
+            title=item.get("title","")
+            if require_any and not any(k in title for k in require_any):continue
+            if exclude_any and any(k in title for k in exclude_any):continue
+            key=_norm_title(title)
+            if key in seen:continue
+            if any(_similar(key,_norm_title(old["title"]))>=0.78 for old in items):continue
+            seen.add(key);items.append(item)
+            if len(items)>=limit:return items
+    return items
+
 def build_context():
     overseas={};symbols={"标普500":"^GSPC","纳斯达克":"^IXIC","恒生指数":"^HSI","美元人民币":"CNY=X"}
-    for k,s in symbols.items():
-        r=yahoo_return(s)
+    for k,sym in symbols.items():
+        r=yahoo_return(sym)
         if r is not None:overseas[k]=r
-    news_items=google_news("上证指数 A股 沪深股市")
-    macro_items=[]
-    seen=set()
-    for q in ("中国央行 货币政策 股市","国务院 财政政策 A股","中国宏观经济 股市","降准 降息 A股"):
-        for item in google_news(q,limit=8):
-            key=_norm_title(item["title"])
-            if key in seen:continue
-            seen.add(key)
-            macro_items.append(item)
-            if len(macro_items)>=12:break
-        if len(macro_items)>=12:break
-    return {"news_items":news_items[:12],"macro_items":macro_items[:12],"news_titles":[x["title"] for x in news_items[:12]],"macro_titles":[x["title"] for x in macro_items[:12]],"overseas":overseas}
+
+    news_items=_collect_news(
+        ["A股","上证指数","沪深股市","中国股市","A股 市场"],
+        limit=12,
+        require_any=["A股","上证","沪深","中国股市","股市"]
+    )
+
+    macro_items=_collect_news(
+        ["中国央行 货币政策","国务院 财政政策","中国宏观经济 股市","降准 降息 A股","中国资产 机构"],
+        limit=12,
+        require_any=["中国","央行","国务院","财政","货币","A股","沪深","中国资产","宏观经济"],
+        exclude_any=["日本股市","日本央行","韩国股市","美股","纳斯达克","标普500"]
+    )
+
+    return {
+        "news_items":news_items,
+        "macro_items":macro_items,
+        "news_titles":[x["title"] for x in news_items],
+        "macro_titles":[x["title"] for x in macro_items],
+        "overseas":overseas
+    }
 
 def llm_news_score(titles, role):
     """可选 LLM 层：没有 OPENAI_API_KEY 时返回 None，不影响规则 Agent。"""
