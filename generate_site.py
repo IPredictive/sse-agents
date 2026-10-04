@@ -3,7 +3,8 @@ import json
 from pathlib import Path
 
 from db import init_db, load_daily, load_predictions, load_scored
-from ensemble import BASE_WEIGHTS, evidence_quality, adaptive_weights, stabilize_extreme
+from ensemble import evidence_quality, adaptive_weights, stabilize_extreme
+from context import build_context
 
 OUT = Path(__file__).parent / "site" / "index.html"
 
@@ -119,6 +120,10 @@ def main():
     analysts = [analyst_rows[k] for k in analyst_order if k in analyst_rows]
 
     # --- Decision breakdown: reproduce ensemble's weighting inputs ---
+    try:
+        live_context = build_context(as_of_date=latest) if latest != "-" else {}
+    except Exception:
+        live_context = {}
     preds = {k: analyst_rows[k] for k in analyst_order if k in analyst_rows}
     weights = adaptive_weights({
         k: type("Pred", (), {
@@ -133,7 +138,7 @@ def main():
             "confidence": float(r.confidence),
             "prob_up": float(r.prob_up)
         })()
-        quality[k] = evidence_quality(pred_obj, k, {})
+        quality[k] = evidence_quality(pred_obj, k, live_context)
         adjusted[k] = stabilize_extreme(float(r.prob_up), quality[k])
         weights[k] *= 0.78 + 0.42 * quality[k]
 
@@ -229,8 +234,8 @@ def main():
 .gauge{{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}}.gauge-ring{{width:180px;height:90px;border:15px solid #263144;border-bottom:0;border-radius:180px 180px 0 0;position:relative;overflow:hidden}}.gauge-fill{{position:absolute;left:-15px;bottom:-15px;width:180px;height:90px;border:15px solid transparent;border-top-color:#7aa2ff;border-radius:180px 180px 0 0;transform-origin:50% 100%;transform:rotate({(-90 + (prob or .5)*180):.1f}deg)}}.gauge-center{{margin-top:-3px;text-align:center}}.gauge-center b{{font-size:27px}}.gauge-center span{{display:block;color:var(--muted);font-size:11px;margin-top:3px}}
 .breakdown{{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}}.break-item{{padding:12px;border:1px solid var(--line);border-radius:12px;background:#0d131d}}.break-top{{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}}.break-top strong{{color:#dce4f0}}.break-num{{font-size:18px;font-weight:800;margin-top:6px}}.break-bar{{height:5px;background:#202a3a;border-radius:99px;margin-top:7px;overflow:hidden}}.break-bar span{{display:block;height:100%;background:#657fae;border-radius:inherit}}
 .analysts{{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}}.analyst-card{{min-width:0;background:rgba(16,21,31,.92);border:1px solid var(--line);border-radius:16px;padding:16px}}.analyst-head{{display:flex;align-items:center;gap:8px}}.agent-dot{{width:7px;height:7px;border-radius:50%;background:#7f8ba0}}.bull .agent-dot{{background:var(--green);box-shadow:0 0 10px rgba(66,211,146,.5)}}.bear .agent-dot{{background:var(--red);box-shadow:0 0 10px rgba(255,101,118,.45)}}.aname{{color:#aeb9cb;font-size:11px;letter-spacing:.09em;font-weight:800}}.analyst-prob{{font-size:29px;font-weight:800;margin:14px 0 9px;letter-spacing:-.04em}}.mini-track span{{display:block;height:100%;border-radius:inherit;background:#65738a}.bull .mini-track span{{background:var(--green)}}.bear .mini-track span{{background:var(--red)}}.analyst-meta{{display:flex;justify-content:space-between;margin-top:8px;color:var(--muted);font-size:11px}}.analyst-meta strong{{color:#b8c2d2;font-weight:600}}.analyst-card p{{color:#aeb8c8;font-size:12px;line-height:1.65;margin:13px 0 0}}
-.table-wrap{{overflow:auto}}table{{width:100%;border-collapse:collapse;min-width:560px}}th,td{{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}}th{{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}}td{{color:#d6deea}}.table-agent{{font-weight:700;color:#eef2ff}}.footer{{margin-top:28px;display:flex;justify-content:space-between;gap:12px;color:#68758a;font-size:11px}}
-@media(max-width:980px){{.analysts{{grid-template-columns:repeat(2,1fr)}}.chiefrow,.signal-panel{{grid-template-columns:1fr}}}}@media(max-width:700px){{.wrap{{padding:20px 14px 45px}}.top{{align-items:flex-start;flex-direction:column;padding-bottom:20px}}h1{{font-size:24px}}.grid{{grid-template-columns:1fr}}.chiefrow{{grid-template-columns:1fr;gap:18px}}.prob{{font-size:52px}}.analysts{{grid-template-columns:1fr}}.footer{{flex-direction:column}}.signal-row{{grid-template-columns:78px 1fr 48px}}}}
+.perf-grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px}}.perf-label{{font-size:12px;color:var(--muted);margin:4px 0 2px}}.table-wrap{{overflow:auto}}table{{width:100%;border-collapse:collapse;min-width:560px}}th,td{{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}}th{{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}}td{{color:#d6deea}}.table-agent{{font-weight:700;color:#eef2ff}}.footer{{margin-top:28px;display:flex;justify-content:space-between;gap:12px;color:#68758a;font-size:11px}}
+@media(max-width:980px){{.analysts{{grid-template-columns:repeat(2,1fr)}}.chiefrow,.signal-panel,.perf-grid{{grid-template-columns:1fr}}}}@media(max-width:700px){{.wrap{{padding:20px 14px 45px}}.top{{align-items:flex-start;flex-direction:column;padding-bottom:20px}}h1{{font-size:24px}}.grid{{grid-template-columns:1fr}}.chiefrow{{grid-template-columns:1fr;gap:18px}}.prob{{font-size:52px}}.analysts{{grid-template-columns:1fr}}.footer{{flex-direction:column}}.signal-row{{grid-template-columns:78px 1fr 48px}}}}
 </style></head>
 <body><main class="wrap">
 
