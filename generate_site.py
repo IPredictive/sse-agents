@@ -71,14 +71,14 @@ h1{{font-size:30px;margin:0 0 7px}}h2{{margin:0 0 15px;font-size:19px}}.muted{{c
 table{{width:100%;border-collapse:collapse}}th,td{{padding:10px;border-bottom:1px solid #26314b;text-align:left;font-size:14px}}
 .footer{{margin-top:25px;color:#75809a;font-size:12px}}@media(max-width:850px){{.grid,.analysts,.chiefrow{{grid-template-columns:1fr}}}}
 </style></head><body><main class="wrap">
-<div class="top"><div><h1>狮城胖叔·上证分析台</h1><div class="muted">每日自动更新 · 5 位 AI 分析师 + Chief Analyst</div></div><div class="muted">分析基准日：{html.escape(str(latest))}</div></div>
+<div class="top"><div><h1>狮城胖叔·上证分析台</h1><div class="muted">每日自动更新 · 5 位智能分析师 + Chief Analyst</div></div><div class="muted">分析基准日：{html.escape(str(latest))}</div></div>
 <div class="grid">
 <div class="card"><div class="muted">上证指数最新收盘</div><div class="big">{price_text}</div><div class="muted">{change_text} 较前一交易日</div></div>
 <div class="card"><div class="muted">Chief Analyst 上涨概率</div><div class="big {'green' if prob and prob>.5 else 'red' if prob is not None else ''}">{prob_text} · {direction}</div></div>
 <div class="card"><div class="muted">Chief Analyst 信心</div><div class="big">{conf_text}</div></div>
 </div>
 <section class="section card chief"><h2>👔 Chief Analyst 最终判断</h2><div class="chiefrow"><div><div class="muted">下一交易日</div><div class="prob">{prob_text}</div><div class="muted">{direction}</div></div><div class="reason">{html.escape(reason)}</div></div></section>
-<section class="section"><h2>五位 AI 分析师</h2><div class="analysts">{cards}</div></section>
+<section class="section"><h2>五位智能分析师</h2><div class="analysts">{cards}</div></section>
 <section class="section card"><h2>历史战绩</h2><table><tr><th>分析师</th><th>样本</th><th>方向准确率</th><th>Brier</th></tr>{history or '<tr><td colspan="4">暂无已结算样本</td></tr>'}</table></section>
 <div class="footer">本页面由 GitHub Actions 自动生成。仅供研究参考，不构成投资建议。</div>
 </main></body></html>"""
