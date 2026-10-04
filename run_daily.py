@@ -11,7 +11,7 @@ def predict_for(df,context=None):
         try:p=a.predict(df,context)
         except Exception as e:print(f"[{a.name}] error: {e}");p=None
         if p:preds[a.name]=p;save_prediction(base,a.name,p.prob_up,p.reason,p.confidence)
-    ens=combine(preds)
+    ens=combine(preds,context)
     if ens:
         save_prediction(base,"CHIEF_ANALYST",ens.prob_up,ens.reason,ens.confidence)
         print(f"\n===== SSE DAILY AI REPORT {base} =====")
