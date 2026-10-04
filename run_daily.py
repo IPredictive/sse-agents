@@ -22,7 +22,7 @@ def predict_for(df,context=None):
         print("====================================")
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument("--demo",action="store_true");ap.add_argument("--backfill",type=int,default=0);ap.add_argument("--no-news",action="store_true");args=ap.parse_args();init_db();upsert_daily(make_demo() if args.demo else fetch_sse());df=load_daily();ctx={} if args.no_news else build_context()
+    ap=argparse.ArgumentParser();ap.add_argument("--demo",action="store_true");ap.add_argument("--backfill",type=int,default=0);ap.add_argument("--no-news",action="store_true");args=ap.parse_args();init_db();upsert_daily(make_demo() if args.demo else fetch_sse());df=load_daily();ctx={} if args.no_news else build_context(as_of_date=df.date.iloc[-1])
     for i in range(args.backfill,0,-1):predict_for(df.iloc[:len(df)-i],{} if args.backfill else ctx)
     predict_for(df,ctx);print(json.dumps({"latest_date":df.date.iloc[-1],"context":ctx},ensure_ascii=False))
 if __name__=="__main__":main()
