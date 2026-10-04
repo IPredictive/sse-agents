@@ -1,1 +1,26 @@
-<!doctype html><html lang='zh-CN'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>上证指数多智能体看板</title><style>body{font-family:system-ui;max-width:1100px;margin:40px auto;padding:0 18px;background:#f7f7f8}.card{background:white;border:1px solid #ddd;border-radius:14px;padding:20px;margin:14px 0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.big{font-size:34px;font-weight:700}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}@media(max-width:700px){.grid{grid-template-columns:1fr}}</style><body><h1>上证指数多智能体预测</h1><p>自动生成于 GitHub Actions；仅供研究，不构成投资建议。</p><div class='grid'><div class='card'>最新收盘<div class='big'>3,842.20</div></div><div class='card'>预测基准日<div class='big'>2026-09-30</div></div><div class='card'>下一交易日上涨概率<div class='big'>50.6% 偏多</div></div></div><div class='card'><h2>最新各 Agent</h2><table><tr><th>Agent</th><th>上涨概率</th><th>理由</th></tr><tr><td>CHIEF_ANALYST</td><td>50.0%</td><td>五位分析师加权汇总：technical:50.0%；flow:50.0%；macro:50.0%；sentiment:50.0%；overseas:50.0%</td></tr><tr><td>ENSEMBLE</td><td>50.6%</td><td>综合5个智能体：technical:43.0%；flow:43.0%；macro:62.0%；sentiment:50.0%；overseas:55.0%</td></tr><tr><td>flow</td><td>43.0%</td><td>量比20日=0.86；20日动量偏弱</td></tr><tr><td>macro</td><td>62.0%</td><td>读取12条宏观/政策标题，政策情绪分=+4</td></tr><tr><td>overseas</td><td>55.0%</td><td>标普500+0.73%；纳斯达克+1.19%；美元人民币-0.09%</td></tr><tr><td>sentiment</td><td>50.0%</td><td>读取12条财经标题，关键词情绪分=+0</td></tr><tr><td>technical</td><td>43.0%</td><td>MA5&lt;MA20；MACD柱为负；RSI=35中性</td></tr></table></div><div class='card'><h2>历史战绩</h2><table><tr><th>Agent</th><th>样本</th><th>方向准确率</th><th>Brier</th></tr></table></div></body></html>
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>狮城胖叔·上证分析台</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#eef2ff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:1180px;margin:auto;padding:28px 18px 50px}.top{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:22px}
+h1{font-size:30px;margin:0 0 7px}h2{margin:0 0 15px;font-size:19px}.muted{color:#9aa5bd;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card,.analyst{background:#131a2d;border:1px solid #26314b;border-radius:16px;padding:20px;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.big{font-size:34px;font-weight:750;margin-top:7px}.green{color:#55d98b}.red{color:#ff7182}
+.section{margin-top:16px}.chief{border:1px solid #435b8e;background:linear-gradient(135deg,#18233c,#111827)}
+.chiefrow{display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center}.prob{font-size:56px;font-weight:800}.reason{font-size:16px;line-height:1.7;color:#d9e1f2}
+.analysts{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.analyst{padding:16px}.aname{font-size:12px;color:#9aa5bd;letter-spacing:.08em;font-weight:700}.aprob{font-size:27px;font-weight:750;margin:8px 0}
+table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #26314b;text-align:left;font-size:14px}
+.footer{margin-top:25px;color:#75809a;font-size:12px}@media(max-width:850px){.grid,.analysts,.chiefrow{grid-template-columns:1fr}}
+</style></head><body><main class="wrap">
+<div class="top"><div><h1>狮城胖叔·上证分析台</h1><div class="muted">每日自动更新 · 5 位 AI 分析师 + Chief Analyst</div></div><div class="muted">分析基准日：2026-09-30</div></div>
+<div class="grid">
+<div class="card"><div class="muted">上证指数最新收盘</div><div class="big">3,842.20</div><div class="muted">+0.31% 较前一交易日</div></div>
+<div class="card"><div class="muted">Chief Analyst 上涨概率</div><div class="big red">50.0% · 偏空</div></div>
+<div class="card"><div class="muted">Chief Analyst 信心</div><div class="big">0.0%</div></div>
+</div>
+<section class="section card chief"><h2>👔 Chief Analyst 最终判断</h2><div class="chiefrow"><div><div class="muted">下一交易日</div><div class="prob">50.0%</div><div class="muted">偏空</div></div><div class="reason">五位分析师加权汇总：technical:50.0%；flow:50.0%；macro:50.0%；sentiment:50.0%；overseas:50.0%</div></div></section>
+<section class="section"><h2>五位 AI 分析师</h2><div class="analysts"><div class='analyst'><div class='aname'>FLOW</div><div class='aprob'>43.0%</div><div class='muted'>信心 64.0%</div><p>量比20日=0.86；20日动量偏弱</p></div><div class='analyst'><div class='aname'>MACRO</div><div class='aprob'>62.0%</div><div class='muted'>信心 66.0%</div><p>读取12条宏观/政策标题，政策情绪分=+4</p></div><div class='analyst'><div class='aname'>OVERSEAS</div><div class='aprob'>55.0%</div><div class='muted'>信心 58.0%</div><p>标普500+0.73%；纳斯达克+1.19%；美元人民币-0.09%</p></div><div class='analyst'><div class='aname'>SENTIMENT</div><div class='aprob'>50.0%</div><div class='muted'>信心 50.0%</div><p>读取12条财经标题，关键词情绪分=+0</p></div><div class='analyst'><div class='aname'>TECHNICAL</div><div class='aprob'>43.0%</div><div class='muted'>信心 71.0%</div><p>MA5&lt;MA20；MACD柱为负；RSI=35中性</p></div></div></section>
+<section class="section card"><h2>历史战绩</h2><table><tr><th>分析师</th><th>样本</th><th>方向准确率</th><th>Brier</th></tr><tr><td colspan="4">暂无已结算样本</td></tr></table></section>
+<div class="footer">本页面由 GitHub Actions 自动生成。仅供研究参考，不构成投资建议。</div>
+</main></body></html>
