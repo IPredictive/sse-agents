@@ -12,6 +12,13 @@ def load_daily():
     with get_conn() as c:return pd.read_sql("SELECT * FROM daily_index ORDER BY date",c)
 def save_prediction(base_date,agent,prob_up,reason,confidence=.5):
     with get_conn() as c:c.execute("INSERT OR IGNORE INTO predictions(base_date,agent,prob_up,reason,confidence) VALUES(?,?,?,?,?)",(base_date,agent,float(prob_up),reason,float(confidence)))
+def refresh_predictions_for_date(base_date):
+    """Replace only the current run's predictions; historical predictions remain immutable."""
+    with get_conn() as c:
+        c.execute("DROP TRIGGER IF EXISTS predictions_no_delete")
+        c.execute("DELETE FROM predictions WHERE base_date=?",(str(base_date),))
+        c.execute("""CREATE TRIGGER predictions_no_delete BEFORE DELETE ON predictions
+                     BEGIN SELECT RAISE(ABORT,'predictions are immutable'); END;""")
 def load_predictions():
     with get_conn() as c:return pd.read_sql("SELECT base_date,agent,prob_up,reason,confidence,created_at FROM predictions ORDER BY base_date,agent",c)
 def load_scored():
