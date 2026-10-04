@@ -3,8 +3,7 @@ name: Daily SSE Agents
 on:
   workflow_dispatch:
   schedule:
-    - cron: "35 15 * * 1-5"
-      timezone: "Asia/Shanghai"
+    - cron: "35 7 * * 1-5"
 
 permissions:
   contents: write
