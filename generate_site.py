@@ -7,6 +7,17 @@ OUT=Path(__file__).parent/"site"/"index.html"
 def pct(x):
     return f"{float(x):.1%}"
 
+def direction_text(p):
+    if p is None:return "暂无"
+    p=float(p)
+    if p>=0.70:return "强烈偏多"
+    if p>=0.60:return "偏多"
+    if p>=0.53:return "中性偏多"
+    if p>0.47:return "中性"
+    if p>0.40:return "中性偏空"
+    if p>0.30:return "偏空"
+    return "强烈偏空"
+
 def main():
     init_db()
     d=load_daily()
@@ -39,7 +50,7 @@ def main():
         for agent,g in s.groupby("agent"):
             history+=f"<tr><td>{html.escape(str(agent))}</td><td>{len(g)}</td><td>{pct(g.correct.mean())}</td><td>{g.brier.mean():.4f}</td></tr>"
 
-    direction="偏多" if prob is not None and prob>.5 else "偏空" if prob is not None else "暂无"
+    direction=direction_text(prob)
     price_text=f"{price:,.2f}" if price is not None else "-"
     change_text=f"{change:+.2%}" if change is not None else "-"
     prob_text=pct(prob) if prob is not None else "-"
