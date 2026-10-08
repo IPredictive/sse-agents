@@ -242,7 +242,18 @@ def main():
 .analysts{{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}}.analyst-card{{min-width:0;background:rgba(16,21,31,.92);border:1px solid var(--line);border-radius:16px;padding:16px}}.analyst-head{{display:flex;align-items:center;gap:8px}}.agent-dot{{width:7px;height:7px;border-radius:50%;background:#7f8ba0}}.bull .agent-dot{{background:var(--green);box-shadow:0 0 10px rgba(66,211,146,.5)}}.bear .agent-dot{{background:var(--red);box-shadow:0 0 10px rgba(255,101,118,.45)}}.aname{{color:#aeb9cb;font-size:11px;letter-spacing:.09em;font-weight:800}}.analyst-prob{{font-size:29px;font-weight:800;margin:14px 0 9px;letter-spacing:-.04em}}.mini-track span{{display:block;height:100%;border-radius:inherit;background:#65738a}}.bull .mini-track span{{background:var(--green)}}.bear .mini-track span{{background:var(--red)}}.analyst-meta{{display:flex;justify-content:space-between;margin-top:8px;color:var(--muted);font-size:11px}}.analyst-meta strong{{color:#b8c2d2;font-weight:600}}.analyst-card p{{color:#aeb8c8;font-size:12px;line-height:1.65;margin:13px 0 0}}
 .perf-grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px}}.perf-label{{font-size:12px;color:var(--muted);margin:4px 0 2px}}.table-wrap{{overflow:auto}}table{{width:100%;border-collapse:collapse;min-width:560px}}th,td{{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}}th{{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}}td{{color:#d6deea}}.table-agent{{font-weight:700;color:#eef2ff}}.footer{{margin-top:28px;display:flex;justify-content:space-between;gap:12px;color:#68758a;font-size:11px}}
 @media(max-width:980px){{.analysts{{grid-template-columns:repeat(2,1fr)}}.chiefrow,.signal-panel,.perf-grid{{grid-template-columns:1fr}}}}@media(max-width:700px){{.wrap{{padding:20px 14px 45px}}.top{{align-items:flex-start;flex-direction:column;padding-bottom:20px}}h1{{font-size:24px}}.grid{{grid-template-columns:1fr}}.chiefrow{{grid-template-columns:1fr;gap:18px}}.prob{{font-size:52px}}.analysts{{grid-template-columns:1fr}}.footer{{flex-direction:column}}.signal-row{{grid-template-columns:78px 1fr 48px}}}}
-</style></head>
+
+.human-game{{overflow:hidden;position:relative;background:linear-gradient(135deg,rgba(24,35,58,.98),rgba(13,19,29,.98));border-color:#304465}}
+.human-hero{{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}}
+.human-kicker{{display:inline-flex;padding:6px 10px;border-radius:999px;background:rgba(122,162,255,.12);border:1px solid #304465;color:#b9c7e4;font-size:11px;font-weight:800;letter-spacing:.08em}}
+.human-hero h2{{font-size:25px;margin:12px 0 7px}}.human-hero p{{color:#aeb9cb;margin:0;font-size:13px;line-height:1.7}}
+.human-stats{{display:flex;gap:10px}}.human-stats div{{min-width:105px;padding:12px 14px;border:1px solid #293a56;border-radius:14px;background:rgba(7,12,20,.35)}}.human-stats span{{display:block;color:#8997ab;font-size:10px}}.human-stats strong{{display:block;margin-top:5px;font-size:18px}}
+.human-compare{{display:grid;grid-template-columns:1fr 70px 1fr;gap:12px;align-items:center;margin-top:20px}}.ai-side,.human-side{{padding:18px;border-radius:16px;border:1px solid #293a56;background:rgba(7,12,20,.35)}}.ai-side span,.human-side>span{{display:block;color:#9facbf;font-size:12px}}.ai-side b{{display:block;font-size:34px;margin:8px 0 2px}}.ai-side em{{display:block;color:#ff6576;font-style:normal;font-weight:700;font-size:13px}}.ai-side small,.human-side small{{display:block;color:#77869b;margin-top:10px;font-size:10px}}.vs{{text-align:center;font-weight:900;color:#f4c95d;font-size:15px}}
+.vote-buttons{{display:flex;gap:10px;margin-top:10px}}.vote-buttons button,.leader-head button{{border:0;border-radius:12px;padding:11px 16px;font-weight:800;cursor:pointer}}.vote-buttons button{{flex:1;font-size:14px;background:#182438;color:#eef4ff;border:1px solid #334966}}.vote-buttons button:first-child{{border-color:#2e8063}}.vote-buttons button:last-child{{border-color:#8a3e4b}}.vote-buttons button.selected{{box-shadow:0 0 0 2px #f4c95d inset}}.vote-buttons button:disabled{{cursor:default;opacity:.75}}
+.human-result{{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-top:12px;padding:11px 14px;border-radius:12px;background:rgba(8,13,21,.55);border:1px solid #25354d;font-size:12px}}.human-result span{{color:#8391a5}}.celebrate{{animation:pop .7s ease}}@keyframes pop{{50%{{transform:scale(1.01)}}}}
+.leaderboard{{margin-top:18px;border-top:1px solid #25354d;padding-top:16px}}.leader-head{{display:flex;justify-content:space-between;align-items:center;gap:10px}}.leader-head h3{{margin:0;font-size:15px}}.leader-head button{{background:#f4c95d;color:#15120a;font-size:11px}}.leader-row{{display:grid;grid-template-columns:30px 1fr 90px 100px;gap:10px;align-items:center;padding:11px 5px;border-bottom:1px solid #1f2a3b}}.leader-row span{{font-size:16px}}.leader-row b{{font-size:13px}}.leader-row small{{color:#8390a2}}.leader-row strong{{text-align:right;font-size:12px;color:#cbd5e3}}.leader-row.top{{background:rgba(244,201,93,.04)}}.leader-note{{color:#6f7d91;font-size:10px;margin-top:10px}}
+@media(max-width:700px){{.human-hero{{flex-direction:column}}.human-stats{{width:100%}}.human-stats div{{flex:1}}.human-compare{{grid-template-columns:1fr}}.vs{{padding:2px}}.human-result{{flex-direction:column;align-items:flex-start}}.leader-row{{grid-template-columns:26px 1fr 70px}}.leader-row strong{{display:none}}}}
+\n</style></head>
 <body><main class="wrap">
 
 <header class="top"><div class="brand"><div class="logo">📈</div><div><h1>狮城胖叔·上证分析台</h1><div class="muted">量化数据 · 多维信号 · 每日自动更新</div></div></div><div class="date-pill">分析基准日 · {html.escape(str(latest))}</div></header>
@@ -298,8 +309,46 @@ def main():
 <div class="table-wrap"><table><tr><th>分析师</th><th>样本</th><th>方向准确率</th><th>Brier</th></tr>{history or '<tr><td colspan="4">暂无已结算样本</td></tr>'}</table></div>
 </section>
 
-<footer class="footer"><span>狮城胖叔·上证分析台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
-</main></body></html>"""
+
+<section class="section human-game" data-human-game>
+  <div class="human-hero">
+    <div>
+      <div class="human-kicker">👥 HUMAN CHALLENGE</div>
+      <h2>明天上证，你敢挑战 AI 吗？</h2>
+      <p>AI 继续独立预测；你的选择只用于人工排行榜，不会改变 AI 结果。</p>
+    </div>
+    <div class="human-stats">
+      <div><span>P币余额</span><strong data-balance>3,000 P</strong></div>
+      <div><span>连续参与</span><strong data-streak>0 天</strong></div>
+    </div>
+  </div>
+  <div class="human-compare">
+    <div class="ai-side">
+      <span>🤖 Chief Analyst</span>
+      <b>{prob_text}</b>
+      <em>{direction}</em>
+      <small>AI 独立预测</small>
+    </div>
+    <div class="vs">VS</div>
+    <div class="human-side">
+      <span>👤 你</span>
+      <div class="vote-buttons">
+        <button type="button" data-vote="bull">🟢 看多</button>
+        <button type="button" data-vote="bear">🔴 看空</button>
+      </div>
+      <small>每次参与消耗 100 P · 09:00 截止</small>
+    </div>
+  </div>
+  <div class="human-result" data-result></div>
+  <div class="leaderboard">
+    <div class="leader-head"><h3>🏆 AI × 人类排行榜</h3><button type="button" data-login>保存成绩 / 登录</button></div>
+    <div class="leader-row top"><span>🥇</span><b>Chief Analyst</b><small>🤖 AI</small><strong>—</strong></div>
+    <div class="leader-row"><span>🥈</span><b>你</b><small>👤 玩家</small><strong data-balance>3,000 P</strong></div>
+    <div class="leader-row"><span>🥉</span><b>Technical Analyst</b><small>🤖 AI</small><strong>—</strong></div>
+    <div class="leader-note">正式版将显示所有玩家实时排名；AI 与人类同榜，但积分规则独立。</div>
+  </div>
+</section>\n\n<footer class="footer"><span>狮城胖叔·上证分析台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
+</main><script src="community.js"></script>\n</body></html>"""
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html_doc, encoding="utf-8")
