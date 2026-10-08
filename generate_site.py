@@ -324,7 +324,8 @@ __PRICE_SVG__
 <footer class="footer"><span>上证预测打擂台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
 </main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="community.js"></script>\n</body></html>"""
 
-    const ai_prob = (k) => k in analyst_rows ? f"{float(analyst_rows[k].prob_up)*100:.1f}%" : "—"
+    def ai_prob(k):
+        return f"{float(analyst_rows[k].prob_up)*100:.1f}%" if k in analyst_rows else "—"
     replacements = {
         "__LATEST__": html.escape(str(latest)),
         "__TECH_PROB__": ai_prob("technical"),
