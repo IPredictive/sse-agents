@@ -274,42 +274,6 @@ def main():
 {price_svg}
 </section>
 
-<section class="section card">
-<div class="section-title"><h2>五位分析师信号</h2><span class="hint">50% = 中性基线</span></div>
-<div class="signal-panel"><div class="signal-list">{signal_cards}</div>
-<div class="gauge"><div class="gauge-ring"><div class="gauge-fill"></div></div><div class="gauge-center"><b class="{chief_tone}">{prob_text}</b><span>Chief Analyst 综合概率</span></div></div></div>
-</section>
-
-<section class="section card">
-<div class="section-title"><h2>多空力量仪表盘</h2><span class="hint">五维独立信号</span></div>
-<div class="signal-panel"><div class="signal-list">{signal_cards}</div>
-<div class="gauge"><div class="gauge-ring"><div class="gauge-fill"></div></div><div class="gauge-center"><b class="{chief_tone}">{direction}</b><span>综合方向判断</span></div></div></div>
-</section>
-
-<section class="section card">
-<div class="section-title"><h2>Chief Analyst 决策拆解</h2><span class="hint">动态权重 + 证据质量 + 极端值稳定化</span></div>
-<div class="breakdown">
-{breakdown_html}
-</div>
-<div class="reason" style="margin-top:16px">简单平均为 <b>{pct(simple_average)}</b>；经过各分析师历史表现、置信度、证据质量及分歧处理后，动态加权基准为 <b>{pct(weighted_base)}</b>。最终 Chief Analyst 为 <b>{prob_text}</b>，并根据不同信号分组的交叉验证结果进行调整。{html.escape(reason)}</div>
-</section>
-
-<section class="section">
-<div class="section-title"><h2>五位智能分析师</h2><span class="hint">独立信号 → 动态加权 → Chief Analyst</span></div>
-<div class="analysts">{cards}</div>
-</section>
-
-<section class="section card chart-card">
-<div class="chart-head"><div><div class="chart-title">历史预测表现</div><div class="chart-desc">滚动 10 个已结算预测 · 越高越好（准确率）· 越低越好（Brier）</div></div></div>
-<div class="perf-grid"><div><div class="perf-label">方向准确率</div>{acc_svg}</div><div><div class="perf-label">Brier Score</div>{brier_svg}</div></div>
-</section>
-
-<section class="section card">
-<div class="section-title"><h2>历史战绩</h2><span class="hint">已结算预测</span></div>
-<div class="table-wrap"><table><tr><th>分析师</th><th>样本</th><th>方向准确率</th><th>Brier</th></tr>{history or '<tr><td colspan="4">暂无已结算样本</td></tr>'}</table></div>
-</section>
-
-
 <section class="section human-game" data-human-game>
   <div class="human-hero">
     <div>
