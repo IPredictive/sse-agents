@@ -79,14 +79,18 @@
     const tradingDate = nextWeekday();
     if (!beforeCutoff(tradingDate)) return;
     const { data: { user } } = await db.auth.getUser();
-    if (!user) {
-      const { error: authError } = await db.auth.signInAnonymously();
+    let activeUser = user;
+    if (!activeUser) {
+      const { data: authData, error: authError } = await db.auth.signInAnonymously();
       if (authError) {
-        result.innerHTML = "<b>游客身份创建失败</b><span>请稍后再试。</span>";
+        result.innerHTML = "<b>游客身份创建失败</b><span>请在 Supabase 开启 Anonymous Sign-Ins。</span>";
         return;
       }
-      await render();
-      return;
+      activeUser = authData.user;
+      if (!activeUser) {
+        result.innerHTML = "<b>游客身份创建失败</b><span>请刷新页面后再试。</span>";
+        return;
+      }
     }
     buttons.forEach(b => b.disabled = true);
     const { error } = await db.rpc("place_prediction", {
