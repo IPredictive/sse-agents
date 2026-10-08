@@ -28,7 +28,11 @@
 .leaderboard{margin-top:18px;border-top:1px solid #25354d;padding-top:16px}.leader-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.leader-head h3{margin:0;font-size:15px}.leader-head button{background:#f4c95d;color:#15120a;font-size:11px}.leader-row{display:grid;grid-template-columns:30px 1fr 90px 100px;gap:10px;align-items:center;padding:11px 5px;border-bottom:1px solid #1f2a3b}.leader-row span{font-size:16px}.leader-row b{font-size:13px}.leader-row small{color:#8390a2}.leader-row strong{text-align:right;font-size:12px;color:#cbd5e3}.leader-row.top{background:rgba(244,201,93,.04)}.leader-note{color:#6f7d91;font-size:10px;margin-top:10px}
 @media(max-width:700px){.human-hero{flex-direction:column}.human-stats{width:100%}.human-stats div{flex:1}.human-compare{grid-template-columns:1fr}.vs{padding:2px}.human-result{flex-direction:column;align-items:flex-start}.leader-row{grid-template-columns:26px 1fr 70px}.leader-row strong{display:none}}
 
-</style></head>
+<style>
+.auth-modal{position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:20px;background:rgba(3,6,12,.78);backdrop-filter:blur(8px)}
+.auth-modal.open{display:grid}.auth-box{width:min(430px,100%);background:#101722;border:1px solid #2b3950;border-radius:20px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.auth-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.auth-head h3{margin:0;font-size:20px}.auth-close{border:0;background:none;color:#8d98aa;font-size:24px;cursor:pointer}.auth-subtitle{color:#8d98aa;font-size:12px;margin-top:5px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:18px 0 12px;padding:4px;background:#0b111b;border-radius:12px}.auth-tabs button{border:0;background:transparent;color:#8d98aa;padding:9px;border-radius:9px;cursor:pointer}.auth-tabs button.active{background:#24324a;color:#fff;font-weight:800}.auth-form{display:grid;gap:11px}.auth-form label{color:#aeb9cb;font-size:11px}.auth-form input,.account-view input{width:100%;margin-top:5px;padding:12px;border-radius:10px;border:1px solid #2b3950;background:#0b111b;color:#fff;outline:none}.auth-submit{border:0;border-radius:11px;padding:12px;background:#f4c95d;color:#15120a;font-weight:900;cursor:pointer}.auth-link{border:0;background:none;color:#8faeff;cursor:pointer;text-align:left;padding:0;font-size:11px}.auth-message{min-height:18px;color:#8d98aa;font-size:11px;line-height:1.5}.auth-message.ok{color:#42d392}.auth-message.err{color:#ff6576}.account-view{display:grid;gap:12px}.account-box{padding:12px;border:1px solid #29384f;border-radius:12px;background:#0b111b}.account-box span{display:block;color:#7f8ba0;font-size:10px}.account-box strong{display:block;margin-top:4px}.account-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.account-actions button{border:1px solid #30415f;background:#182438;color:#fff;border-radius:10px;padding:10px;cursor:pointer}.account-actions button:last-child{background:#3b2028;border-color:#7c3d49}
+</style></style></head>
 <body><main class="wrap">
 
 <header class="top"><div class="brand"><div class="logo">📈</div><div><h1>狮城胖叔·上证分析台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前下注</div></div></div><div class="date-pill">分析基准日 · 2026-10-08</div></header>
@@ -100,5 +104,27 @@
 </section>
 
 <footer class="footer"><span>狮城胖叔·上证分析台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
-</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="community.js"></script>
+
+<div class="auth-modal" data-auth-modal aria-hidden="true">
+  <div class="auth-box" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <div class="auth-head"><div><h3 id="auth-title">登录 / 注册</h3><div class="auth-subtitle" data-auth-subtitle>登录后保存你的 P币、预测和排行榜成绩。</div></div><button class="auth-close" type="button" data-auth-close>×</button></div>
+    <div class="auth-tabs" data-auth-tabs><button type="button" data-auth-mode="login" class="active">登录</button><button type="button" data-auth-mode="register">注册</button></div>
+    <form class="auth-form" data-auth-form>
+      <div data-nickname-field style="display:none"><label>昵称<input name="nickname" maxlength="20" placeholder="你的昵称"></label></div>
+      <label>邮箱<input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+      <label>密码<input name="password" type="password" minlength="8" required placeholder="至少 8 位"></label>
+      <div data-password2-field style="display:none"><label>确认密码<input name="password2" type="password" minlength="8" autocomplete="new-password" placeholder="再次输入密码"></label></div>
+      <button class="auth-submit" type="submit" data-auth-submit>登录</button>
+      <button class="auth-link" type="button" data-forgot-password>忘记密码？发送重置邮件</button>
+      <div class="auth-message" data-auth-message></div>
+    </form>
+    <div class="account-view" data-account-view style="display:none">
+      <div class="account-box"><span>登录邮箱</span><strong data-account-email>—</strong></div>
+      <label>昵称<input data-account-nickname maxlength="20"></label>
+      <div class="account-box"><span>P币余额</span><strong data-account-balance>0 P</strong></div>
+      <div class="auth-message" data-account-message></div>
+      <div class="account-actions"><button type="button" data-save-profile>保存昵称</button><button type="button" data-change-password>修改密码</button><button type="button" data-logout>退出登录</button></div>
+    </div>
+  </div>
+</div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="community.js"></script>
 </body></html>
