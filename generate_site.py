@@ -227,7 +227,7 @@ def main():
     html_doc = """<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080b12">
-<title>狮城胖叔·上证分析台</title>
+<title>上证预测打擂台</title>
 <style>
 :root{--bg:#080b12;--panel:#10151f;--panel2:#141b28;--line:#222c3d;--text:#f4f7fb;--muted:#8d98aa;--soft:#c5cedc;--green:#42d392;--red:#ff6576;--blue:#7aa2ff;--gold:#f4c95d}
 *{box-sizing:border-box}body{margin:0;color:var(--text);background:radial-gradient(circle at 80% -10%,rgba(91,118,255,.18),transparent 32%),radial-gradient(circle at 10% 15%,rgba(66,211,146,.07),transparent 25%),var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
@@ -258,7 +258,7 @@ def main():
 </style></head>
 <body><main class="wrap">
 
-<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>狮城胖叔·上证分析台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前下注</div></div></div><div class="top-actions"><div class="date-pill">分析基准日 · __LATEST__</div><button class="top-login" type="button" data-account>登录 / 注册</button></div></header>
+<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>上证预测打擂台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前下注</div></div></div><div class="top-actions"><div class="date-pill">分析基准日 · __LATEST__</div><button class="top-login" type="button" data-account>登录 / 注册</button></div></header>
 
 <section class="grid">
 <div class="card"><div class="metric-label">上证指数 · Latest Close</div><div class="big">__PRICE__</div><div class="sub __CHANGE_CLS__">__CHANGE_TEXT__ <span style="color:var(--muted)">较前一交易日</span></div></div>
@@ -316,7 +316,7 @@ __PRICE_SVG__
   </div>
 </section>\n
 <div class="auth-modal" data-auth-modal aria-hidden="true"><div class="auth-box" role="dialog" aria-modal="true"><div class="auth-head"><div><h2>登录 / 注册</h2><div class="auth-subtitle" data-auth-subtitle>登录后保存你的 P币、预测和排行榜成绩。</div></div><button class="auth-close" type="button" data-auth-close>×</button></div><div class="auth-tabs" data-auth-tabs><button type="button" data-auth-mode="login" class="active">登录</button><button type="button" data-auth-mode="register">注册</button></div><form class="auth-form" data-auth-form><label data-nickname-field style="display:none">昵称<input name="nickname" maxlength="20" autocomplete="nickname"></label><label>邮箱<input name="email" type="email" required autocomplete="email"></label><label>密码<input name="password" type="password" required minlength="8"></label><label data-password2-field style="display:none">确认密码<input name="password2" type="password" minlength="8"></label><button class="auth-submit" type="submit" data-auth-submit>登录</button><button class="auth-link" type="button" data-forgot-password>忘记密码？</button><div class="auth-message" data-auth-message></div></form><div class="account-view" data-account-view><div class="account-box"><div class="account-meta">邮箱：<b data-account-email>—</b><br>余额：<b data-account-balance>0 P</b></div><label>昵称<input data-account-nickname maxlength="20"></label><div class="account-actions"><button type="button" data-save-profile>保存昵称</button><button type="button" data-change-password>修改密码</button><button type="button" data-logout>退出登录</button></div><div class="auth-message" data-account-message></div></div></div></div></div>
-\n<footer class="footer"><span>狮城胖叔·上证分析台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
+\n<footer class="footer"><span>上证预测打擂台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
 </main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="community.js"></script>\n</body></html>"""
 
     replacements = {
