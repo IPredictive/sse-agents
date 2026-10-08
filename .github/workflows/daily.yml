@@ -4,9 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore:
-      - "data/**"
-      - "site/**"
+    paths:
+      - "**/*.py"
+      - "*.py"
+      - "requirements.txt"
+      - "site/community.js"
+      - ".github/workflows/daily.yml"
   schedule:
     - cron: "35 7 * * 1-5"
 
