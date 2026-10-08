@@ -78,12 +78,18 @@
     }
     const tradingDate = nextWeekday();
     if (!beforeCutoff(tradingDate)) return;
-    const { data: { user } } = await db.auth.getUser();
+    result.innerHTML = "<b>⏳ 正在提交…</b><span>正在连接游客身份与云端账户。</span>";
+    const { data: { user }, error: userError } = await db.auth.getUser();
+    if (userError) {
+      result.innerHTML = "<b>身份读取失败</b><span>" + (userError.message || "Supabase Auth 读取失败") + "</span>";
+      return;
+    }
     let activeUser = user;
     if (!activeUser) {
+      result.innerHTML = "<b>⏳ 创建游客身份…</b><span>第一次参与需要创建云端玩家身份。</span>";
       const { data: authData, error: authError } = await db.auth.signInAnonymously();
       if (authError) {
-        result.innerHTML = "<b>游客身份创建失败</b><span>请在 Supabase 开启 Anonymous Sign-Ins。</span>";
+        result.innerHTML = "<b>游客身份创建失败</b><span>" + (authError.message || "Anonymous Sign-In 失败") + "</span>";
         return;
       }
       activeUser = authData.user;
@@ -93,11 +99,22 @@
       }
     }
     buttons.forEach(b => b.disabled = true);
-    const { error } = await db.rpc("place_prediction", {
-      p_trading_date: tradingDate, p_direction: btn.dataset.vote, p_stake: 100
-    });
+    result.innerHTML = "<b>⏳ 云端处理中…</b><span>正在写入 100 P 押注。</span>";
+    let rpcResult;
+    try {
+      rpcResult = await Promise.race([
+        db.rpc("place_prediction", {
+          p_trading_date: tradingDate, p_direction: btn.dataset.vote, p_stake: 100
+        }),
+        new Promise(resolve => setTimeout(() => resolve({ data: null, error: { message: "请求超时（10秒）。请检查 Supabase Data API / RPC 是否可用。" } }), 10000))
+      ]);
+    } catch (e) {
+      rpcResult = { data: null, error: { message: e?.message || String(e) } };
+    }
+    const error = rpcResult?.error;
     if (error) {
-      result.innerHTML = "<b>提交失败</b><span>" + (error.message.includes("ALREADY_VOTED") ? "你今天已经投过票了。" : error.message.includes("VOTING_CLOSED") ? "投票已截止。" : "请稍后再试。") + "</span>";
+      const msg = error.message || "未知错误";
+      result.innerHTML = "<b>提交失败</b><span>" + (msg.includes("ALREADY_VOTED") ? "你今天已经投过票了。" : msg.includes("VOTING_CLOSED") ? "投票已截止。" : msg.includes("INSUFFICIENT_BALANCE") ? "P币余额不足。" : msg) + "</span>";
       await render();
       return;
     }
