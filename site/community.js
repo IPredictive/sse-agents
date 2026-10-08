@@ -30,6 +30,12 @@
   const accountBalance = modal?.querySelector("[data-account-balance]");
   const accountNickname = modal?.querySelector("[data-account-nickname]");
   const subtitle = modal?.querySelector("[data-auth-subtitle]");
+  const adminPanel = modal?.querySelector("[data-admin-panel]");
+  const adminAmount = modal?.querySelector("[data-admin-amount]");
+  const adminReason = modal?.querySelector("[data-admin-reason]");
+  const adminCredit = modal?.querySelector("[data-admin-credit]");
+  const adminMessage = modal?.querySelector("[data-admin-message]");
+  const ADMIN_USER_ID = "f3d39b91-babb-4b6c-a9f9-7ae726e676d2";
   let authMode = "login";
 
   function init() {
@@ -113,6 +119,10 @@
       ? "当前是游客账户。正式注册/登录后可跨设备保留账户。"
       : "";
     accountMessage.className = "auth-message " + (user.is_anonymous ? "" : "ok");
+    if (adminPanel) {
+      adminPanel.style.display = user.id === ADMIN_USER_ID ? "grid" : "none";
+      if (adminMessage) adminMessage.textContent = "";
+    }
   }
   async function render() {
     if (!init()) return;
@@ -253,6 +263,41 @@
     if (!email) { authMsg("请先输入注册邮箱。"); return; }
     const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: location.href.split("#")[0] });
     authMsg(error ? ("发送失败：" + error.message) : "重置密码邮件已发送，请查看邮箱。", !error);
+  });
+
+  adminCredit?.addEventListener("click", async () => {
+    const user = await currentUser();
+    if (!user || user.id !== ADMIN_USER_ID) {
+      adminMessage.textContent = "没有管理员权限。";
+      adminMessage.className = "auth-message err";
+      return;
+    }
+    const amount = Number(adminAmount?.value || 0);
+    const reason = (adminReason?.value || "管理员充值").trim().slice(0,80) || "管理员充值";
+    if (!Number.isSafeInteger(amount) || amount <= 0) {
+      adminMessage.textContent = "请输入正整数 P 币数量。";
+      adminMessage.className = "auth-message err";
+      return;
+    }
+    adminCredit.disabled = true;
+    adminMessage.textContent = "正在充值并写入流水…";
+    adminMessage.className = "auth-message";
+    try {
+      const { data, error } = await db.rpc("admin_credit_p_coins", {
+        p_user_id: user.id, p_amount: amount, p_reason: reason
+      });
+      if (error) throw error;
+      adminAmount.value = "";
+      adminMessage.textContent = "充值成功！新余额：" + Number(data || 0).toLocaleString() + " P；已写入 P 币流水。";
+      adminMessage.className = "auth-message ok";
+      await render();
+      await loadAccount(user);
+    } catch (e) {
+      adminMessage.textContent = "充值失败：" + (e?.message || "未知错误");
+      adminMessage.className = "auth-message err";
+    } finally {
+      adminCredit.disabled = false;
+    }
   });
 
   modal?.querySelector("[data-logout]")?.addEventListener("click", async () => {
