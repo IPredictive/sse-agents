@@ -12,6 +12,7 @@
   const buttons = [...root.querySelectorAll("[data-vote]")];
   const login = root.querySelector("[data-login]");
   const leaderboard = root.querySelector(".leaderboard");
+  const humanRows = root.querySelector("[data-human-rows]");
 
   const modal = document.querySelector("[data-auth-modal]");
   const accountButtons = [...document.querySelectorAll("[data-account],[data-login]")];
@@ -139,15 +140,14 @@
   }
   async function loadLeaderboard(me) {
     const { data, error } = await db.rpc("get_leaderboard");
-    if (error || !leaderboard) return;
+    if (error || !humanRows) return;
     const rows = (data || []).slice(0,10).map((x,i) => {
       const medal = ["🥇","🥈","🥉"][i] || (i+1);
       return '<div class="leader-row ' + (x.user_id === me ? "top" : "") + '"><span>' + medal + '</span><b>' +
         escapeHtml(x.user_id === me ? "你" : (x.nickname || "玩家")) + '</b><small>👤 玩家 · ' +
         Number(x.accuracy || 0).toFixed(1) + '%</small><strong>' + Number(x.p_balance || 0).toLocaleString() + ' P</strong></div>';
     }).join("");
-    leaderboard.querySelectorAll(".leader-row:not([data-ai-row])").forEach(x => x.remove());
-    leaderboard.insertAdjacentHTML("beforeend", rows);
+    humanRows.innerHTML = rows || '<div class="leader-note">暂无人类玩家成绩</div>';
   }
 
   buttons.forEach(btn => btn.addEventListener("click", async () => {
