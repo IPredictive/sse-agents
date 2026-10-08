@@ -1,44 +1,86 @@
 (() => {
-  const KEY = "sse_human_game_v1";
-  const now = new Date(Date.now() + 8 * 60 * 60 * 1000);\n  const todayKey = now.toISOString().slice(0,10);\n  const beforeCutoff = now.getUTCHours() < 9;
-  const state = JSON.parse(localStorage.getItem(KEY) || '{"p":3000,"streak":0,"votes":{},"wins":0,"games":0,"nickname":"游客"}');
-  if (typeof state.p !== "number") state.p = 3000;
+  const SUPABASE_URL = "https://hfdrdxxcaqdknniiypnz.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_YLtCCkTOO9KwJKNTyeIMFA_cuEmNG3k";
   const root = document.querySelector("[data-human-game]");
-  if (!root) return;
-  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  if (!root || !window.supabase) return;
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const balance = root.querySelector("[data-balance]");
   const streak = root.querySelector("[data-streak]");
   const result = root.querySelector("[data-result]");
   const buttons = [...root.querySelectorAll("[data-vote]")];
-  function render() {\n    const locked = !beforeCutoff;
-    balance.textContent = state.p.toLocaleString() + " P";
-    streak.textContent = state.streak + " 天";
-    const v = state.votes[todayKey];
-    buttons.forEach(b => {
-      b.disabled = !!v || locked;
-      b.classList.toggle("selected", b.dataset.vote === v);
-    });
-    if (locked && !v) {\n      result.innerHTML = "<b>⏰ 今日投票已截止</b><span>每天 09:00（UTC+8）锁定，等待下一个交易日。</span>";\n    } else if (v) {
-      result.innerHTML = '<b>今天已提交：' + (v === "bull" ? "🟢 看多" : "🔴 看空") +
-        '</b><span>预测会在下一个交易日收盘后结算。</span>';
-    } else {
-      result.innerHTML = '<b>今天还没有选择</b><span>选一个方向，先挑战 AI。</span>';
-    }
+  const login = root.querySelector("[data-login]");
+  const leaderboard = root.querySelector(".leaderboard");
+
+  function sgNow() { return new Date(Date.now() + 8 * 60 * 60 * 1000); }
+  function dateKey(d) { return d.toISOString().slice(0,10); }
+  function nextWeekday() {
+    const d = sgNow();
+    d.setUTCDate(d.getUTCDate() + 1);
+    while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() + 1);
+    return dateKey(d);
   }
-  buttons.forEach(btn => btn.addEventListener("click", () => {
-    if (state.votes[todayKey] || !beforeCutoff) return;
-    const vote = btn.dataset.vote;
-    state.votes[todayKey] = vote;
-    state.games += 1;
-    state.p = Math.max(0, state.p - 100);
-    save();
-    render();
+  function beforeCutoff() { return sgNow().getUTCHours() < 9; }
+
+  async function render() {
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) {
+      balance.textContent = "登录后领取";
+      streak.textContent = "—";
+      buttons.forEach(b => b.disabled = !beforeCutoff());
+      result.innerHTML = "<b>先免费体验，再保存成绩</b><span>登录 Google 后，自动获得 3,000 P币并加入真实排行榜。</span>";
+      return;
+    }
+    const { data: profile } = await db.from("profiles").select("p_balance,nickname").eq("id", user.id).single();
+    const tradingDate = nextWeekday();
+    const { data: prediction } = await db.from("predictions").select("direction,status").eq("user_id", user.id).eq("trading_date", tradingDate).maybeSingle();
+    balance.textContent = Number(profile?.p_balance || 0).toLocaleString() + " P";
+    buttons.forEach(b => { b.disabled = !!prediction || !beforeCutoff(); b.classList.toggle("selected", b.dataset.vote === prediction?.direction); });
+    if (!beforeCutoff() && !prediction) result.innerHTML = "<b>⏰ 今日投票已截止</b><span>每天 09:00（UTC+8）锁定。</span>";
+    else if (prediction) result.innerHTML = "<b>今天已提交：" + (prediction.direction === "bull" ? "🟢 看多" : "🔴 看空") + "</b><span>等待下一交易日收盘结算。</span>";
+    else result.innerHTML = "<b>今天还没有选择</b><span>选一个方向，挑战 AI。</span>";
+    await loadLeaderboard(user.id);
+  }
+
+  async function loadLeaderboard(me) {
+    const { data, error } = await db.rpc("get_leaderboard");
+    if (error || !leaderboard) return;
+    const rows = (data || []).slice(0, 10).map((x, i) =>
+      '<div class="leader-row ' + (x.user_id === me ? 'top' : '') + '"><span>' + ["🥇","🥈","🥉"][i] + '</span><b>' +
+      (x.user_id === me ? "你" : (x.nickname || "玩家")) + '</b><small>👤 玩家 · ' + Number(x.accuracy || 0).toFixed(1) +
+      '%</small><strong>' + Number(x.p_balance || 0).toLocaleString() + ' P</strong></div>'
+    ).join("");
+    const old = leaderboard.querySelector(".leader-row");
+    if (old) leaderboard.querySelectorAll(".leader-row").forEach(x => x.remove());
+    leaderboard.insertAdjacentHTML("beforeend", rows);
+  }
+
+  buttons.forEach(btn => btn.addEventListener("click", async () => {
+    if (!beforeCutoff()) return;
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) {
+      await db.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href } });
+      return;
+    }
+    buttons.forEach(b => b.disabled = true);
+    const { error } = await db.rpc("place_prediction", {
+      p_trading_date: nextWeekday(), p_direction: btn.dataset.vote, p_stake: 100
+    });
+    if (error) {
+      result.innerHTML = "<b>提交失败</b><span>" + (error.message.includes("ALREADY_VOTED") ? "你今天已经投过票了。" : error.message.includes("VOTING_CLOSED") ? "投票已截止。" : "请稍后再试。") + "</span>";
+      await render();
+      return;
+    }
     root.classList.add("celebrate");
     setTimeout(() => root.classList.remove("celebrate"), 700);
+    await render();
   }));
-  const login = root.querySelector("[data-login]");
-  if (login) login.addEventListener("click", () => {
-    alert("先体验、后注册。正式版会接入 Google 登录，并把 P币、预测记录和排行榜保存到云端。");
+
+  if (login) login.addEventListener("click", async () => {
+    const { data: { user } } = await db.auth.getUser();
+    if (user) { await db.auth.signOut(); await render(); }
+    else await db.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href } });
   });
+
+  db.auth.onAuthStateChange(() => render());
   render();
 })();
