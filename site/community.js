@@ -5,7 +5,7 @@
   const root = document.querySelector("[data-human-game]");
   if (!root) return;
 
-  let db = null, initialized = false;
+  let db = null, initialized = false, voteInFlight = false;
   const balance = root.querySelector("[data-balance]");
   const streak = root.querySelector("[data-streak]");
   const result = root.querySelector("[data-result]");
@@ -151,12 +151,14 @@
   }
 
   buttons.forEach(btn => btn.addEventListener("click", async () => {
+    if (voteInFlight) return;
     if (!init()) { result.innerHTML = "<b>投票系统加载失败</b><span>请按 Ctrl+F5 后再试。</span>"; return; }
     const tradingDate = nextWeekday();
     if (!beforeCutoff(tradingDate)) return;
     const user = await currentUser();
     if (!user) { showModal("login"); authMsg("请先登录或注册，登录后才能下注。"); return; }
-    result.innerHTML = "<b>⏳ 云端处理中…</b><span>正在写入 100 P 押注。</span>";
+    voteInFlight = true;
+    result.innerHTML = "<b>⏳ 云端处理中…</b><span>正在写入 100 P 押注，请勿重复点击。</span>";
     buttons.forEach(b => b.disabled = true);
     let rpcResult;
     try {
@@ -171,11 +173,13 @@
       result.innerHTML = "<b>提交失败</b><span>" +
         (msg.includes("ALREADY_VOTED") ? "你已经投过票了。" : msg.includes("VOTING_CLOSED") ? "投票已截止。" :
          msg.includes("INSUFFICIENT_BALANCE") ? "P币余额不足。" : escapeHtml(msg)) + "</span>";
+      voteInFlight = false;
       await render(); return;
     }
     root.classList.add("celebrate","vote-success");
     result.innerHTML = "<b>🔥 押注成功！</b><span>" + (btn.dataset.vote === "bull" ? "你押了看多" : "你押了看空") + " · 100 P 已锁定，等明天收盘见分晓！</span>";
     setTimeout(() => root.classList.remove("celebrate","vote-success"),900);
+    voteInFlight = false;
     await render();
   }));
 
