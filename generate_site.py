@@ -312,6 +312,7 @@ def main():
     <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>政策面 Analyst</b><small>AI · Macro</small><strong>__MACRO_PROB__</strong></div>
     <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>市场情绪 Analyst</b><small>AI · Sentiment</small><strong>__SENTIMENT_PROB__</strong></div>
     <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>海外环境 Analyst</b><small>AI · Overseas</small><strong>__OVERSEAS_PROB__</strong></div>
+    <div data-human-rows></div>
     <div class="leader-note">AI 六位选手每日独立出战；人类玩家按真实 P币与预测战绩动态排名。AI 与人类积分规则独立。</div>
   </div>
 </section>\n
