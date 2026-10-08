@@ -224,7 +224,7 @@ def main():
         for k in preds
     )
 
-    html_doc = f"""<!doctype html>
+    html_doc = """<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080b12">
 <title>狮城胖叔·上证分析台</title>
@@ -256,23 +256,23 @@ def main():
 \n</style></head>
 <body><main class="wrap">
 
-<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>狮城胖叔·上证分析台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前下注</div></div></div><div class="date-pill">分析基准日 · {html.escape(str(latest))}</div></header>
+<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>狮城胖叔·上证分析台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前下注</div></div></div><div class="date-pill">分析基准日 · __LATEST__</div></header>
 
 <section class="grid">
-<div class="card"><div class="metric-label">上证指数 · Latest Close</div><div class="big">{price_text}</div><div class="sub {change_cls}">{change_text} <span style="color:var(--muted)">较前一交易日</span></div></div>
-<div class="card"><div class="metric-label">AI · Chief Analyst</div><div class="big {chief_tone}">{prob_text}</div><div class="sub">{direction} · 下一交易日</div></div>
-<div class="card"><div class="metric-label">AI 信心</div><div class="big">{conf_text}</div><div class="conf-row"><span>模型综合信心</span><div class="conf-track"><span></span></div></div></div>
+<div class="card"><div class="metric-label">上证指数 · Latest Close</div><div class="big">__PRICE__</div><div class="sub __CHANGE_CLS__">__CHANGE_TEXT__ <span style="color:var(--muted)">较前一交易日</span></div></div>
+<div class="card"><div class="metric-label">AI · Chief Analyst</div><div class="big __CHIEF_TONE__">__PROB__</div><div class="sub">__DIRECTION__ · 下一交易日</div></div>
+<div class="card"><div class="metric-label">AI 信心</div><div class="big">__CONF__</div><div class="conf-row"><span>模型综合信心</span><div class="conf-track"><span></span></div></div></div>
 </section>
 
 <section class="card chief">
 <div class="chief-top"><div class="kicker"><span class="kicker-dot"></span> AI × HUMAN</div><div class="muted">面向下一交易日</div></div>
 <div class="hero-slogan">AI 怎么判断？<br><strong>你敢不敢押一边？</strong></div>
-<div class="chiefrow"><div><div class="prob {chief_tone}">{prob_text}</div><div class="chief-direction">{direction}</div></div><div><div class="reason">{html.escape(reason)}</div><div class="conf-row">模型信心 {conf_text}<div class="conf-track"><span></span></div></div></div></div>
+<div class="chiefrow"><div><div class="prob {chief_tone}">{prob_text}</div><div class="chief-direction">{direction}</div></div><div><div class="reason">__REASON__</div><div class="conf-row">模型信心 {conf_text}<div class="conf-track"><span></span></div></div></div></div>
 </section>
 
 <section class="section card chart-card">
-<div class="chart-head"><div><div class="chart-title">上证指数走势</div><div class="chart-desc">最近 60 个交易日 · 最近 20 日区间表现同步显示</div></div><div class="chart-stats"><div class="chart-stat"><b>{ret20:+.2%}</b><span>20 日</span></div><div class="chart-stat"><b>{ret60:+.2%}</b><span>60 日</span></div></div></div>
-{price_svg}
+<div class="chart-head"><div><div class="chart-title">上证指数走势</div><div class="chart-desc">最近 60 个交易日 · 最近 20 日区间表现同步显示</div></div><div class="chart-stats"><div class="chart-stat"><b>__RET20__</b><span>20 日</span></div><div class="chart-stat"><b>__RET60__</b><span>60 日</span></div></div></div>
+__PRICE_SVG__
 </section>
 
 <section class="section human-game" data-human-game>
@@ -315,7 +315,24 @@ def main():
 </section>\n\n<footer class="footer"><span>狮城胖叔·上证分析台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
 </main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="community.js"></script>\n</body></html>"""
 
+    replacements = {
+        "__LATEST__": html.escape(str(latest)),
+        "__PRICE__": price_text,
+        "__CHANGE_CLS__": change_cls,
+        "__CHANGE_TEXT__": change_text,
+        "__CHIEF_TONE__": chief_tone,
+        "__PROB__": prob_text,
+        "__DIRECTION__": direction,
+        "__CONF__": conf_text,
+        "__REASON__": html.escape(reason),
+        "__RET20__": f"{ret20:+.2f}%",
+        "__RET60__": f"{ret60:+.2f}%",
+        "__PRICE_SVG__": price_svg,
+    }
+    for key, value in replacements.items():
+        html_doc = html_doc.replace(key, value)
     html_doc = html_doc.replace("CONF_WIDTH", f"{conf_width:.1f}")
+    html_doc = html_doc.replace("GAUGE_ROTATION", f"{gauge_rotation:.1f}")
     html_doc = html_doc.replace("GAUGE_ROTATION", f"{gauge_rotation:.1f}")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
