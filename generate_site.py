@@ -306,10 +306,13 @@ def main():
   <div class="human-result" data-result><b>🎯 选一个方向</b><span>押中赢 P币，押错扣 P币；每天一次。</span></div>
   <div class="leaderboard">
     <div class="leader-head"><h3>🏆 AI × 人类排行榜</h3><button type="button" data-login>保存成绩 / 登录</button></div>
-    <div class="leader-row top"><span>🥇</span><b>Chief Analyst</b><small>🤖 AI</small><strong>—</strong></div>
-    <div class="leader-row"><span>🥈</span><b>你</b><small>👤 玩家</small><strong data-balance>3,000 P</strong></div>
-    <div class="leader-row"><span>🥉</span><b>Technical Analyst</b><small>🤖 AI</small><strong>—</strong></div>
-    <div class="leader-note">正式版将显示所有玩家实时排名；AI 与人类同榜，但积分规则独立。</div>
+    <div class="leader-row ai-row top" data-ai-row><span>🤖</span><b>Chief Analyst</b><small>AI · 首席</small><strong>__PROB__</strong></div>
+    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>技术面 Analyst</b><small>AI · Technical</small><strong>__TECH_PROB__</strong></div>
+    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>资金面 Analyst</b><small>AI · Flow</small><strong>__FLOW_PROB__</strong></div>
+    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>政策面 Analyst</b><small>AI · Macro</small><strong>__MACRO_PROB__</strong></div>
+    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>市场情绪 Analyst</b><small>AI · Sentiment</small><strong>__SENTIMENT_PROB__</strong></div>
+    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>海外环境 Analyst</b><small>AI · Overseas</small><strong>__OVERSEAS_PROB__</strong></div>
+    <div class="leader-note">AI 六位选手每日独立出战；人类玩家按真实 P币与预测战绩动态排名。AI 与人类积分规则独立。</div>
   </div>
 </section>\n
 <div class="auth-modal" data-auth-modal aria-hidden="true"><div class="auth-box" role="dialog" aria-modal="true"><div class="auth-head"><div><h2>登录 / 注册</h2><div class="auth-subtitle" data-auth-subtitle>登录后保存你的 P币、预测和排行榜成绩。</div></div><button class="auth-close" type="button" data-auth-close>×</button></div><div class="auth-tabs" data-auth-tabs><button type="button" data-auth-mode="login" class="active">登录</button><button type="button" data-auth-mode="register">注册</button></div><form class="auth-form" data-auth-form><label data-nickname-field style="display:none">昵称<input name="nickname" maxlength="20" autocomplete="nickname"></label><label>邮箱<input name="email" type="email" required autocomplete="email"></label><label>密码<input name="password" type="password" required minlength="8"></label><label data-password2-field style="display:none">确认密码<input name="password2" type="password" minlength="8"></label><button class="auth-submit" type="submit" data-auth-submit>登录</button><button class="auth-link" type="button" data-forgot-password>忘记密码？</button><div class="auth-message" data-auth-message></div></form><div class="account-view" data-account-view><div class="account-box"><div class="account-meta">邮箱：<b data-account-email>—</b><br>余额：<b data-account-balance>0 P</b></div><label>昵称<input data-account-nickname maxlength="20"></label><div class="account-actions"><button type="button" data-save-profile>保存昵称</button><button type="button" data-change-password>修改密码</button><button type="button" data-logout>退出登录</button></div><div class="auth-message" data-account-message></div></div></div></div></div>
@@ -320,8 +323,14 @@ __PRICE_SVG__
 <footer class="footer"><span>上证预测打擂台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
 </main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="community.js"></script>\n</body></html>"""
 
+    const ai_prob = (k) => k in analyst_rows ? f"{float(analyst_rows[k].prob_up)*100:.1f}%" : "—"
     replacements = {
         "__LATEST__": html.escape(str(latest)),
+        "__TECH_PROB__": ai_prob("technical"),
+        "__FLOW_PROB__": ai_prob("flow"),
+        "__MACRO_PROB__": ai_prob("macro"),
+        "__SENTIMENT_PROB__": ai_prob("sentiment"),
+        "__OVERSEAS_PROB__": ai_prob("overseas"),
         "__PRICE__": price_text,
         "__CHANGE_CLS__": change_cls,
         "__CHANGE_TEXT__": change_text,
