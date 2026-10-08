@@ -37,7 +37,7 @@
     buttons.forEach(b => { b.disabled = !!prediction || !beforeCutoff(); b.classList.toggle("selected", b.dataset.vote === prediction?.direction); });
     if (!beforeCutoff() && !prediction) result.innerHTML = "<b>⏰ 今日投票已截止</b><span>每天 09:00（UTC+8）锁定。</span>";
     else if (prediction) result.innerHTML = "<b>今天已提交：" + (prediction.direction === "bull" ? "🟢 看多" : "🔴 看空") + "</b><span>等待下一交易日收盘结算。</span>";
-    else result.innerHTML = "<b>今天还没有选择</b><span>选一个方向，挑战 AI。</span>";
+    else result.innerHTML = "<b>🎯 今天还没有押</b><span>选一个方向，100 P 入场，明天收盘揭晓胜负。</span>";
     await loadLeaderboard(user.id);
   }
 
@@ -70,9 +70,12 @@
       await render();
       return;
     }
-    root.classList.add("celebrate");
-    setTimeout(() => root.classList.remove("celebrate"), 700);
+    root.classList.add("celebrate", "vote-success");
+    result.innerHTML = "<b>🔥 押注成功！</b><span>" + (btn.dataset.vote === "bull" ? "你押了看多" : "你押了看空") + " · 100 P 已锁定，等明天收盘见分晓！</span>";
+    setTimeout(() => root.classList.remove("celebrate", "vote-success"), 900);
     await render();
+    result.classList.add("vote-success");
+    setTimeout(() => result.classList.remove("vote-success"), 900);
   }));
 
   if (login) login.addEventListener("click", async () => {
