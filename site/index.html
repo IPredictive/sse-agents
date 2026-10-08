@@ -28,10 +28,28 @@
 .leaderboard{margin-top:18px;border-top:1px solid #25354d;padding-top:16px}.leader-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.leader-head h3{margin:0;font-size:15px}.leader-head button{background:#f4c95d;color:#15120a;font-size:11px}.leader-row{display:grid;grid-template-columns:30px 1fr 90px 100px;gap:10px;align-items:center;padding:11px 5px;border-bottom:1px solid #1f2a3b}.leader-row span{font-size:16px}.leader-row b{font-size:13px}.leader-row small{color:#8390a2}.leader-row strong{text-align:right;font-size:12px;color:#cbd5e3}.leader-row.top{background:rgba(244,201,93,.04)}.leader-note{color:#6f7d91;font-size:10px;margin-top:10px}
 @media(max-width:700px){.human-hero{flex-direction:column}.human-stats{width:100%}.human-stats div{flex:1}.human-compare{grid-template-columns:1fr}.vs{padding:2px}.human-result{flex-direction:column;align-items:flex-start}.leader-row{grid-template-columns:26px 1fr 70px}.leader-row strong{display:none}}
 
+
+.auth-open{border:1px solid #344968;background:rgba(16,25,40,.9);color:#e8eef8;border-radius:999px;padding:9px 14px;font-weight:800;font-size:12px;cursor:pointer}
+.auth-open:hover{filter:brightness(1.12)}
+.auth-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(3,6,11,.76);backdrop-filter:blur(10px)}
+.auth-modal.open{display:flex}
+.auth-panel{width:min(460px,100%);background:linear-gradient(180deg,#151e2d,#0d131d);border:1px solid #30415f;border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.45);padding:22px}
+.auth-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.auth-head h3{margin:0;font-size:20px}.auth-head p{margin:6px 0 0;color:#8795a9;font-size:12px;line-height:1.5}
+.auth-close{border:0;background:#202b3d;color:#aebbd0;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:18px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:18px 0 14px;padding:4px;background:#0b111a;border-radius:12px}
+.auth-tab{border:0;background:transparent;color:#8e9bae;padding:10px;border-radius:9px;font-weight:800;cursor:pointer}.auth-tab.active{background:#1d2a40;color:#f4c95d}
+.auth-form{display:grid;gap:11px}.auth-form label{font-size:11px;color:#9ba8bb}.auth-form input{width:100%;margin-top:5px;border:1px solid #2c3b52;background:#0a1019;color:#f5f7fb;border-radius:11px;padding:12px 13px;outline:none}.auth-form input:focus{border-color:#617fb4}
+.auth-action{border:0;border-radius:12px;padding:13px;background:#f4c95d;color:#17130a;font-weight:900;cursor:pointer}.auth-action:disabled{opacity:.55;cursor:default}
+.auth-message{min-height:18px;color:#9aa8bb;font-size:12px;line-height:1.5}.auth-message.ok{color:#5fe0a0}.auth-message.err{color:#ff8b98}
+.auth-account{display:grid;gap:12px}.account-box{padding:14px;border:1px solid #293950;border-radius:14px;background:rgba(6,11,18,.35)}.account-box span{display:block;color:#7f8da1;font-size:10px}.account-box strong{display:block;margin-top:4px;font-size:15px;word-break:break-all}
+.auth-secondary{border:1px solid #34465f;background:#141e2d;color:#d7dfeb;border-radius:11px;padding:12px;font-weight:800;cursor:pointer}.auth-danger{border-color:#693541;color:#ff9aa6}
+.auth-note{color:#6f7d91;font-size:10px;line-height:1.6}
+@media(max-width:700px){.date-pill{white-space:normal}.auth-panel{padding:18px}}
 </style></head>
 <body><main class="wrap">
 
-<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>狮城胖叔·上证分析台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前下注</div></div></div><div class="date-pill">分析基准日 · 2026-10-08</div></header>
+<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>狮城胖叔·上证分析台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前下注</div></div></div><div style="display:flex;align-items:center;gap:9px"><button class="auth-open" type="button" data-account>登录 / 注册</button><div class="date-pill">分析基准日 · 2026-10-08</div></div></header>
 
 <section class="grid">
 <div class="card"><div class="metric-label">上证指数 · Latest Close</div><div class="big">3,811.90</div><div class="sub down">-0.79% <span style="color:var(--muted)">较前一交易日</span></div></div>
@@ -91,7 +109,7 @@
   </div>
   <div class="human-result" data-result><b>🎯 选一个方向</b><span>押中赢 P币，押错扣 P币；每天一次。</span></div>
   <div class="leaderboard">
-    <div class="leader-head"><h3>🏆 AI × 人类排行榜</h3><button type="button" data-login>保存成绩 / 登录</button></div>
+    <div class="leader-head"><h3>🏆 AI × 人类排行榜</h3><button type="button" data-login>登录 / 注册</button></div>
     <div class="leader-row top"><span>🥇</span><b>Chief Analyst</b><small>🤖 AI</small><strong>—</strong></div>
     <div class="leader-row"><span>🥈</span><b>你</b><small>👤 玩家</small><strong data-balance>3,000 P</strong></div>
     <div class="leader-row"><span>🥉</span><b>Technical Analyst</b><small>🤖 AI</small><strong>—</strong></div>
@@ -99,6 +117,34 @@
   </div>
 </section>
 
+
+<div class="auth-modal" data-auth-modal aria-hidden="true">
+  <div class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <div class="auth-head"><div><h3 id="auth-title">账户中心</h3><p data-auth-subtitle>登录后保存你的 P币、预测和排行榜成绩。</p></div><button class="auth-close" type="button" data-auth-close>×</button></div>
+    <div class="auth-tabs" data-auth-tabs>
+      <button class="auth-tab active" type="button" data-auth-mode="login">登录</button>
+      <button class="auth-tab" type="button" data-auth-mode="register">注册</button>
+    </div>
+    <form class="auth-form" data-auth-form>
+      <div data-nickname-field style="display:none"><label>昵称<input name="nickname" maxlength="20" placeholder="例如：狮城胖叔"></label></div>
+      <label>邮箱<input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+      <label>密码<input name="password" type="password" autocomplete="current-password" minlength="8" required placeholder="至少 8 位"></label>
+      <div data-password2-field style="display:none"><label>确认密码<input name="password2" type="password" minlength="8" placeholder="再输入一次密码"></label></div>
+      <button class="auth-action" type="submit" data-auth-submit>登录</button>
+      <div class="auth-message" data-auth-message></div>
+    </form>
+    <div class="auth-account" data-account-view style="display:none">
+      <div class="account-box"><span>登录邮箱</span><strong data-account-email>—</strong></div>
+      <div class="account-box"><span>P币余额</span><strong data-account-balance>—</strong></div>
+      <label style="font-size:11px;color:#9ba8bb">昵称<input data-account-nickname maxlength="20" style="width:100%;margin-top:5px;border:1px solid #2c3b52;background:#0a1019;color:#f5f7fb;border-radius:11px;padding:12px 13px;outline:none"></label>
+      <button class="auth-action" type="button" data-save-profile>保存账户资料</button>
+      <button class="auth-secondary" type="button" data-change-password>修改密码</button>
+      <button class="auth-secondary auth-danger" type="button" data-logout>退出登录</button>
+      <div class="auth-message" data-account-message></div>
+      <div class="auth-note">邮箱用于登录和找回账户；昵称会显示在排行榜。我们不使用 Google 登录。</div>
+    </div>
+  </div>
+</div>
 <footer class="footer"><span>狮城胖叔·上证分析台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
 </main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="community.js"></script>
 </body></html>
