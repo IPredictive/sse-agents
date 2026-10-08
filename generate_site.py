@@ -272,10 +272,7 @@ def main():
 <div class="chiefrow"><div><div class="prob __CHIEF_TONE__">__PROB__</div><div class="chief-direction">__DIRECTION__</div></div><div><div class="reason">__REASON__</div><div class="conf-row">模型信心 __CONF__<div class="conf-track"><span></span></div></div></div></div>
 </section>
 
-<section class="section card chart-card">
-<div class="chart-head"><div><div class="chart-title">上证指数走势</div><div class="chart-desc">最近 60 个交易日 · 最近 20 日区间表现同步显示</div></div><div class="chart-stats"><div class="chart-stat"><b>__RET20__</b><span>20 日</span></div><div class="chart-stat"><b>__RET60__</b><span>60 日</span></div></div></div>
-__PRICE_SVG__
-</section>
+
 
 <section class="section human-game" data-human-game>
   <div class="human-hero">
@@ -316,7 +313,11 @@ __PRICE_SVG__
   </div>
 </section>\n
 <div class="auth-modal" data-auth-modal aria-hidden="true"><div class="auth-box" role="dialog" aria-modal="true"><div class="auth-head"><div><h2>登录 / 注册</h2><div class="auth-subtitle" data-auth-subtitle>登录后保存你的 P币、预测和排行榜成绩。</div></div><button class="auth-close" type="button" data-auth-close>×</button></div><div class="auth-tabs" data-auth-tabs><button type="button" data-auth-mode="login" class="active">登录</button><button type="button" data-auth-mode="register">注册</button></div><form class="auth-form" data-auth-form><label data-nickname-field style="display:none">昵称<input name="nickname" maxlength="20" autocomplete="nickname"></label><label>邮箱<input name="email" type="email" required autocomplete="email"></label><label>密码<input name="password" type="password" required minlength="8"></label><label data-password2-field style="display:none">确认密码<input name="password2" type="password" minlength="8"></label><button class="auth-submit" type="submit" data-auth-submit>登录</button><button class="auth-link" type="button" data-forgot-password>忘记密码？</button><div class="auth-message" data-auth-message></div></form><div class="account-view" data-account-view><div class="account-box"><div class="account-meta">邮箱：<b data-account-email>—</b><br>余额：<b data-account-balance>0 P</b></div><label>昵称<input data-account-nickname maxlength="20"></label><div class="account-actions"><button type="button" data-save-profile>保存昵称</button><button type="button" data-change-password>修改密码</button><button type="button" data-logout>退出登录</button></div><div class="auth-message" data-account-message></div></div></div></div></div>
-\n<footer class="footer"><span>上证预测打擂台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
+\n<section class="section card chart-card">
+<div class="chart-head"><div><div class="chart-title">上证指数走势</div><div class="chart-desc">最近 60 个交易日 · 最近 20 日区间表现同步显示</div></div><div class="chart-stats"><div class="chart-stat"><b>__RET20__</b><span>20 日</span></div><div class="chart-stat"><b>__RET60__</b><span>60 日</span></div></div></div>
+__PRICE_SVG__
+</section>
+<footer class="footer"><span>上证预测打擂台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
 </main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="community.js"></script>\n</body></html>"""
 
     replacements = {
