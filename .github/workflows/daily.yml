@@ -2,6 +2,11 @@ name: Daily SSE Agents
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "data/**"
+      - "site/**"
   schedule:
     - cron: "35 7 * * 1-5"
 
