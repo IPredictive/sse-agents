@@ -1,4 +1,4 @@
-(() => {
+// Voting UI: live Supabase community system\n(() => {
   const SUPABASE_URL = "https://hfdrdxxcaqdknniiypnz.supabase.co";
   const SUPABASE_KEY = "sb_publishable_YLtCCkTOO9KwJKNTyeIMFA_cuEmNG3k";
   const root = document.querySelector("[data-human-game]");
