@@ -201,20 +201,19 @@
         await render();
         setTimeout(hideModal,500);
       } else {
-        const redirect = location.href.split("#")[0];
         const { data, error } = await db.auth.signUp({
           email,password,
-          options:{emailRedirectTo:redirect,data:{nickname}}
+          options:{data:{nickname}}
         });
         if (error) throw error;
-        if (data.session) {
-          await db.from("profiles").update({nickname}).eq("id",data.user.id);
-          authMsg("注册成功，账户已经登录。",true);
-          await render();
-          setTimeout(() => { setMode("account"); loadAccount(data.user); },500);
-        } else {
-          authMsg("注册成功！请打开邮箱里的确认链接，完成邮箱验证后再登录。",true);
+        if (!data.session || !data.user) {
+          authMsg("注册未直接登录。请在 Supabase 的 Authentication → Providers → Email 中关闭“Confirm email”，然后再试。");
+          return;
         }
+        await db.from("profiles").update({nickname}).eq("id",data.user.id);
+        authMsg("注册成功，账户已经登录。",true);
+        await render();
+        setTimeout(() => { setMode("account"); loadAccount(data.user); },500);
       }
     } catch(e) {
       authMsg(e?.message || "操作失败，请稍后再试。");
@@ -244,6 +243,13 @@
     accountMessage.textContent = error ? ("修改失败：" + error.message) : "密码已更新。";
     accountMessage.className = "auth-message " + (error ? "err" : "ok");
   });
+  modal?.querySelector("[data-forgot-password]")?.addEventListener("click", async () => {
+    const email = form?.elements?.email?.value?.trim();
+    if (!email) { authMsg("请先输入注册邮箱。"); return; }
+    const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: location.href.split("#")[0] });
+    authMsg(error ? ("发送失败：" + error.message) : "重置密码邮件已发送，请查看邮箱。", !error);
+  });
+
   modal?.querySelector("[data-logout]")?.addEventListener("click", async () => {
     await db.auth.signOut();
     hideModal(); await render();
