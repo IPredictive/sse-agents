@@ -57,7 +57,8 @@
   async function currentUser() {
     if (!init()) return null;
     const { data, error } = await db.auth.getUser();
-    return error ? null : data?.user || null;
+    const user = error ? null : data?.user || null;
+    return user?.is_anonymous ? null : user;
   }
   function showModal(mode = "login") {
     if (!modal) return;
