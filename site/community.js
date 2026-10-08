@@ -2,8 +2,18 @@
   const SUPABASE_URL = "https://hfdrdxxcaqdknniiypnz.supabase.co";
   const SUPABASE_KEY = "sb_publishable_YLtCCkTOO9KwJKNTyeIMFA_cuEmNG3k";
   const root = document.querySelector("[data-human-game]");
-  if (!root || !window.supabase) return;
-  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  if (!root) return;
+
+  // Supabase CDN 可能比页面脚本晚一点加载；不要因此让投票按钮失效。
+  let db = null;
+  let initialized = false;
+  function init() {
+    if (initialized) return true;
+    if (!window.supabase) return false;
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    initialized = true;
+    return true;
+  }
   const balance = root.querySelector("[data-balance]");
   const streak = root.querySelector("[data-streak]");
   const result = root.querySelector("[data-result]");
@@ -28,6 +38,7 @@
   }
 
   async function render() {
+    if (!init()) return;
     const { data: { user } } = await db.auth.getUser();
     if (!user) {
       balance.textContent = "登录后领取";
@@ -62,6 +73,10 @@
   }
 
   buttons.forEach(btn => btn.addEventListener("click", async () => {
+    if (!init()) {
+      result.innerHTML = "<b>正在连接投票系统…</b><span>请再点一次，或刷新页面。</span>";
+      return;
+    }
     const tradingDate = nextWeekday();
     if (!beforeCutoff(tradingDate)) return;
     const { data: { user } } = await db.auth.getUser();
@@ -87,11 +102,27 @@
   }));
 
   if (login) login.addEventListener("click", async () => {
+    if (!init()) {
+      result.innerHTML = "<b>正在连接登录系统…</b><span>请刷新页面后再试。</span>";
+      return;
+    }
     const { data: { user } } = await db.auth.getUser();
     if (user) { await db.auth.signOut(); await render(); }
     else await db.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href } });
   });
 
-  db.auth.onAuthStateChange(() => render());
-  render();
+  // 初始时先保证按钮可点击；登录/截止状态由 render() 再决定。
+  buttons.forEach(b => b.disabled = false);
+  let tries = 0;
+  const boot = setInterval(() => {
+    tries += 1;
+    if (init()) {
+      clearInterval(boot);
+      db.auth.onAuthStateChange(() => render());
+      render();
+    } else if (tries >= 100) {
+      clearInterval(boot);
+      result.innerHTML = "<b>投票系统加载失败</b><span>请按 Ctrl+F5 强制刷新页面。</span>";
+    }
+  }, 50);
 })();
