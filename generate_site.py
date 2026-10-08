@@ -348,7 +348,7 @@ def main():
     <div class="leader-note">正式版将显示所有玩家实时排名；AI 与人类同榜，但积分规则独立。</div>
   </div>
 </section>\n\n<footer class="footer"><span>狮城胖叔·上证分析台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
-</main><script src="community.js"></script>\n</body></html>"""
+</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="community.js"></script>\n</body></html>"""
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html_doc, encoding="utf-8")
