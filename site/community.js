@@ -41,11 +41,10 @@
     if (!init()) return;
     const { data: { user } } = await db.auth.getUser();
     if (!user) {
-      balance.textContent = "登录后领取";
+      balance.textContent = "准备中…";
       streak.textContent = "—";
-      const tradingDate = nextWeekday();
-      buttons.forEach(b => b.disabled = !beforeCutoff(tradingDate));
-      result.innerHTML = "<b>先免费体验，再保存成绩</b><span>登录 Google 后，自动获得 3,000 P币并加入真实排行榜。</span>";
+      buttons.forEach(b => b.disabled = false);
+      result.innerHTML = "<b>🎯 直接选择方向</b><span>无需 Google 登录，首次参与自动创建游客身份并领取 3,000 P。</span>";
       return;
     }
     const { data: profile } = await db.from("profiles").select("p_balance,nickname").eq("id", user.id).single();
@@ -81,7 +80,12 @@
     if (!beforeCutoff(tradingDate)) return;
     const { data: { user } } = await db.auth.getUser();
     if (!user) {
-      await db.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href } });
+      const { error: authError } = await db.auth.signInAnonymously();
+      if (authError) {
+        result.innerHTML = "<b>游客身份创建失败</b><span>请稍后再试。</span>";
+        return;
+      }
+      await render();
       return;
     }
     buttons.forEach(b => b.disabled = true);
@@ -101,15 +105,7 @@
     setTimeout(() => result.classList.remove("vote-success"), 900);
   }));
 
-  if (login) login.addEventListener("click", async () => {
-    if (!init()) {
-      result.innerHTML = "<b>正在连接登录系统…</b><span>请刷新页面后再试。</span>";
-      return;
-    }
-    const { data: { user } } = await db.auth.getUser();
-    if (user) { await db.auth.signOut(); await render(); }
-    else await db.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href } });
-  });
+  if (login) login.style.display = "none";
 
   // 初始时先保证按钮可点击；登录/截止状态由 render() 再决定。
   buttons.forEach(b => b.disabled = false);
