@@ -258,7 +258,7 @@ def main():
 </style></head>
 <body><main class="wrap">
 
-<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>上证预测打擂台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前下注</div></div></div><div class="top-actions"><div class="date-pill">分析基准日 · __LATEST__</div><button class="top-login" type="button" data-account>登录 / 注册</button></div></header>
+<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>上证预测打擂台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前游戏停止预测，游戏使用赠予积分币，不涉及任何实质财富。</div></div></div><div class="top-actions"><div class="date-pill">分析基准日 · __LATEST__</div><button class="top-login" type="button" data-account>登录 / 注册</button></div></header>
 
 <section class="grid">
 <div class="card"><div class="metric-label">上证指数 · Latest Close</div><div class="big">__PRICE__</div><div class="sub __CHANGE_CLS__">__CHANGE_TEXT__ <span style="color:var(--muted)">较前一交易日</span></div></div>
