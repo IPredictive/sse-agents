@@ -2,8 +2,8 @@ name: Daily Supabase Keepalive
 
 on:
   schedule:
-    # Every day at 00:15 UTC (08:15 Singapore time)
-    - cron: "15 0 * * *"
+    # 10 queries daily, from 00:15 to 21:15 UTC (08:15 to 05:15 Singapore time next day)
+    - cron: "15 0,2,4,6,8,10,12,14,16,18 * * *"
   workflow_dispatch:
 
 permissions:
