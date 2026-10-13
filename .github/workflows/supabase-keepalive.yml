@@ -1,0 +1,46 @@
+name: Daily Supabase Keepalive
+
+on:
+  schedule:
+    # Every day at 00:15 UTC (08:15 Singapore time)
+    - cron: "15 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          test -n "$SUPABASE_URL" || (echo "::error::Missing repository secret SUPABASE_URL" && exit 1)
+          test -n "$SUPABASE_ANON_KEY" || (echo "::error::Missing repository secret SUPABASE_ANON_KEY" && exit 1)
+
+      - name: Query Supabase database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          URL="${SUPABASE_URL%/}/rest/v1/ai_predictions?select=*&limit=1"
+          CODE=$(curl --silent --show-error --output /tmp/supabase-response.json --write-out "%{http_code}" \
+            "$URL" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Accept: application/json")
+          echo "Supabase REST query HTTP status: $CODE"
+          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 300 ]; then
+            echo "::error::Supabase query failed. Check URL/key and whether ai_predictions allows SELECT for the anon role."
+            cat /tmp/supabase-response.json
+            exit 1
+          fi
+          echo "Database query succeeded. Response bytes: $(wc -c < /tmp/supabase-response.json)"
