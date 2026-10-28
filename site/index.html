@@ -11,7 +11,7 @@
 .section{margin-top:28px}.section-title{display:flex;justify-content:space-between;align-items:end;margin-bottom:14px}.section-title .hint{color:var(--muted);font-size:12px}
 .chart-card{padding:20px}.chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:10px}.chart-title{font-size:17px;font-weight:750}.chart-desc{color:var(--muted);font-size:12px;margin-top:5px;line-height:1.5}.chart-stats{display:flex;gap:18px;flex-wrap:wrap}.chart-stat b{font-size:17px}.chart-stat span{display:block;color:var(--muted);font-size:10px;margin-top:3px}.line-svg{width:100%;height:auto;display:block;margin-top:4px}.axis{stroke:#293346;stroke-width:1}.line{fill:none;stroke:#7aa2ff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.area{fill:url(#areaGrad)}.point{fill:#7aa2ff;stroke:#0e141f;stroke-width:3}.value-label{fill:#dce6fa;font-size:12px;font-weight:700;text-anchor:middle}.empty-chart{height:220px;display:grid;place-items:center;color:var(--muted)}
 .signal-panel{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.signal-list{display:flex;flex-direction:column;gap:17px;padding-top:4px}.signal-row{display:grid;grid-template-columns:92px 1fr 55px;gap:12px;align-items:center}.signal-name{font-size:12px;color:#c8d1df}.signal-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;background:#7f8ba0}.signal-dot.bull{background:var(--green)}.signal-dot.bear{background:var(--red)}.signal-track{height:9px;background:#202a3a;border-radius:999px;position:relative;overflow:visible}.signal-track span{position:absolute;left:0;top:0;height:100%;border-radius:999px;background:#69768b}.signal-track span.bull{background:var(--green)}.signal-track span.bear{background:var(--red)}.signal-track i{position:absolute;left:50%;top:-4px;height:17px;width:1px;background:#566175}.signal-value{text-align:right;font-weight:800;font-size:13px}
-.gauge{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}.gauge-ring{width:180px;height:90px;border:15px solid #263144;border-bottom:0;border-radius:180px 180px 0 0;position:relative;overflow:hidden}.gauge-fill{position:absolute;left:-15px;bottom:-15px;width:180px;height:90px;border:15px solid transparent;border-top-color:#7aa2ff;border-radius:180px 180px 0 0;transform-origin:50% 100%;transform:rotate(-13.0deg)}.gauge-center{margin-top:-3px;text-align:center}.gauge-center b{font-size:27px}.gauge-center span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.gauge{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}.gauge-ring{width:180px;height:90px;border:15px solid #263144;border-bottom:0;border-radius:180px 180px 0 0;position:relative;overflow:hidden}.gauge-fill{position:absolute;left:-15px;bottom:-15px;width:180px;height:90px;border:15px solid transparent;border-top-color:#7aa2ff;border-radius:180px 180px 0 0;transform-origin:50% 100%;transform:rotate(-12.7deg)}.gauge-center{margin-top:-3px;text-align:center}.gauge-center b{font-size:27px}.gauge-center span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
 .breakdown{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}.break-item{padding:12px;border:1px solid var(--line);border-radius:12px;background:#0d131d}.break-top{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}.break-top strong{color:#dce4f0}.break-num{font-size:18px;font-weight:800;margin-top:6px}.break-bar{height:5px;background:#202a3a;border-radius:99px;margin-top:7px;overflow:hidden}.break-bar span{display:block;height:100%;background:#657fae;border-radius:inherit}
 .analysts{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.analyst-card{min-width:0;background:rgba(16,21,31,.92);border:1px solid var(--line);border-radius:16px;padding:16px}.analyst-head{display:flex;align-items:center;gap:8px}.agent-dot{width:7px;height:7px;border-radius:50%;background:#7f8ba0}.bull .agent-dot{background:var(--green);box-shadow:0 0 10px rgba(66,211,146,.5)}.bear .agent-dot{background:var(--red);box-shadow:0 0 10px rgba(255,101,118,.45)}.aname{color:#aeb9cb;font-size:11px;letter-spacing:.09em;font-weight:800}.analyst-prob{font-size:29px;font-weight:800;margin:14px 0 9px;letter-spacing:-.04em}.mini-track span{display:block;height:100%;border-radius:inherit;background:#65738a}.bull .mini-track span{background:var(--green)}.bear .mini-track span{background:var(--red)}.analyst-meta{display:flex;justify-content:space-between;margin-top:8px;color:var(--muted);font-size:11px}.analyst-meta strong{color:#b8c2d2;font-weight:600}.analyst-card p{color:#aeb8c8;font-size:12px;line-height:1.65;margin:13px 0 0}
 .perf-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.perf-label{font-size:12px;color:var(--muted);margin:4px 0 2px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:560px}th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}th{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}td{color:#d6deea}.table-agent{font-weight:700;color:#eef2ff}.footer{margin-top:28px;display:flex;justify-content:space-between;gap:12px;color:#68758a;font-size:11px}
@@ -33,18 +33,18 @@
 </style></head>
 <body><main class="wrap">
 
-<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>上证预测打擂台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前游戏停止预测，游戏使用赠予积分币，不涉及任何实质财富。</div></div></div><div class="top-actions"><div class="date-pill">分析基准日 · 2026-10-26</div><button class="top-login" type="button" data-account>登录 / 注册</button></div></header>
+<header class="top"><div class="brand"><div class="logo">📈</div><div><h1>上证预测打擂台</h1><div class="muted">AI 每日判断 · 你来挑战 · 09:00 前游戏停止预测，游戏使用赠予积分币，不涉及任何实质财富。</div></div></div><div class="top-actions"><div class="date-pill">分析基准日 · 2026-10-28</div><button class="top-login" type="button" data-account>登录 / 注册</button></div></header>
 
 <section class="grid">
-<div class="card"><div class="metric-label">上证指数 · Latest Close</div><div class="big">3,697.52</div><div class="sub up">+0.19% <span style="color:var(--muted)">较前一交易日</span></div></div>
-<div class="card"><div class="metric-label">AI · Chief Analyst</div><div class="big bear">42.8%</div><div class="sub">中性偏空 · 下一交易日</div></div>
+<div class="card"><div class="metric-label">上证指数 · Latest Close</div><div class="big">3,681.47</div><div class="sub up">+0.91% <span style="color:var(--muted)">较前一交易日</span></div></div>
+<div class="card"><div class="metric-label">AI · Chief Analyst</div><div class="big bear">43.0%</div><div class="sub">中性偏空 · 下一交易日</div></div>
 <div class="card"><div class="metric-label">AI 信心</div><div class="big">56.0%</div><div class="conf-row"><span>模型综合信心</span><div class="conf-track"><span></span></div></div></div>
 </section>
 
 <section class="card chief">
 <div class="chief-top"><div class="kicker"><span class="kicker-dot"></span> AI × HUMAN</div><div class="muted">面向下一交易日</div></div>
 <div class="hero-slogan">AI 怎么判断？<br><strong>你敢不敢押一边？</strong></div>
-<div class="chiefrow"><div><div class="prob bear">42.8%</div><div class="chief-direction">中性偏空</div></div><div><div class="reason">动态加权汇总：technical:8.0%(证据100%，权重1.23)；flow:42.8%(证据58%，权重1.05)；macro:50.4%(证据41%，权重1.08)；sentiment:53.2%(证据50%，权重0.92)；overseas:60.9%(证据65%，权重0.88)；分析师分歧=52.9%；交叉验证分歧；分组=核心市场:24.0%；政策情绪:51.7%；海外环境:60.9%；综合判断中性偏空</div><div class="conf-row">模型信心 56.0%<div class="conf-track"><span></span></div></div></div></div>
+<div class="chiefrow"><div><div class="prob bear">43.0%</div><div class="chief-direction">中性偏空</div></div><div><div class="reason">动态加权汇总：technical:8.0%(证据100%，权重1.26)；flow:43.9%(证据56%，权重1.07)；macro:52.1%(证据43%，权重1.06)；sentiment:52.5%(证据49%，权重0.90)；overseas:61.4%(证据66%，权重0.87)；分析师分歧=53.4%；交叉验证分歧；分组=核心市场:24.5%；政策情绪:52.3%；海外环境:61.4%；综合判断中性偏空</div><div class="conf-row">模型信心 56.0%<div class="conf-track"><span></span></div></div></div></div>
 </section>
 
 
@@ -64,7 +64,7 @@
   <div class="human-compare">
     <div class="ai-side">
       <span>🤖 Chief Analyst</span>
-      <b>42.8%</b>
+      <b>43.0%</b>
       <em>中性偏空</em>
       <small>AI 独立预测</small>
     </div>
@@ -81,12 +81,12 @@
   <div class="human-result" data-result><b>🎯 选一个方向</b><span>押中赢 P币，押错扣 P币；每天一次。</span></div>
   <div class="leaderboard">
     <div class="leader-head"><h3>🏆 AI × 人类排行榜</h3><button type="button" data-login>保存成绩 / 登录</button></div>
-    <div class="leader-row ai-row top" data-ai-row><span>🤖</span><b>Chief Analyst</b><small>AI · 首席</small><strong>42.8%</strong></div>
+    <div class="leader-row ai-row top" data-ai-row><span>🤖</span><b>Chief Analyst</b><small>AI · 首席</small><strong>43.0%</strong></div>
     <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>技术面 Analyst</b><small>AI · Technical</small><strong>8.0%</strong></div>
-    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>资金面 Analyst</b><small>AI · Flow</small><strong>42.8%</strong></div>
-    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>政策面 Analyst</b><small>AI · Macro</small><strong>50.4%</strong></div>
-    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>市场情绪 Analyst</b><small>AI · Sentiment</small><strong>53.2%</strong></div>
-    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>海外环境 Analyst</b><small>AI · Overseas</small><strong>60.9%</strong></div>
+    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>资金面 Analyst</b><small>AI · Flow</small><strong>43.9%</strong></div>
+    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>政策面 Analyst</b><small>AI · Macro</small><strong>52.1%</strong></div>
+    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>市场情绪 Analyst</b><small>AI · Sentiment</small><strong>52.5%</strong></div>
+    <div class="leader-row ai-row" data-ai-row><span>🤖</span><b>海外环境 Analyst</b><small>AI · Overseas</small><strong>61.4%</strong></div>
     <div data-human-rows></div>
     <div class="leader-note">AI 六位选手每日独立出战；人类玩家按真实 P币与预测战绩动态排名。AI 与人类积分规则独立。</div>
   </div>
@@ -102,10 +102,10 @@
       </linearGradient></defs>
       <line x1="44" y1="24" x2="44" y2="236" class="axis"/>
       <line x1="44" y1="236" x2="856" y2="236" class="axis"/>
-      <polygon points="44,236 44.0,108.3 57.8,136.9 71.5,127.3 85.3,142.4 99.1,124.8 112.8,139.3 126.6,131.2 140.3,95.4 154.1,81.4 167.9,56.1 181.6,39.1 195.4,59.9 209.2,51.8 222.9,64.4 236.7,64.3 250.4,28.9 264.2,24.0 278.0,85.2 291.7,79.2 305.5,78.3 319.3,93.1 333.0,88.4 346.8,73.6 360.5,45.5 374.3,48.3 388.1,26.6 401.8,30.6 415.6,55.2 429.4,54.8 443.1,62.4 456.9,60.8 470.6,55.7 484.4,48.8 498.2,59.7 511.9,89.2 525.7,91.0 539.5,104.4 553.2,87.0 567.0,97.2 580.7,74.0 594.5,49.8 608.3,48.4 622.0,58.3 635.8,89.0 649.6,130.3 663.3,126.0 677.1,118.5 690.8,137.8 704.6,136.6 718.4,147.2 732.1,144.9 745.9,166.3 759.7,204.4 773.4,198.8 787.2,189.5 800.9,186.7 814.7,200.9 828.5,236.0 842.2,215.3 856.0,210.8 856,236" class="area"/>
-      <polyline points="44.0,108.3 57.8,136.9 71.5,127.3 85.3,142.4 99.1,124.8 112.8,139.3 126.6,131.2 140.3,95.4 154.1,81.4 167.9,56.1 181.6,39.1 195.4,59.9 209.2,51.8 222.9,64.4 236.7,64.3 250.4,28.9 264.2,24.0 278.0,85.2 291.7,79.2 305.5,78.3 319.3,93.1 333.0,88.4 346.8,73.6 360.5,45.5 374.3,48.3 388.1,26.6 401.8,30.6 415.6,55.2 429.4,54.8 443.1,62.4 456.9,60.8 470.6,55.7 484.4,48.8 498.2,59.7 511.9,89.2 525.7,91.0 539.5,104.4 553.2,87.0 567.0,97.2 580.7,74.0 594.5,49.8 608.3,48.4 622.0,58.3 635.8,89.0 649.6,130.3 663.3,126.0 677.1,118.5 690.8,137.8 704.6,136.6 718.4,147.2 732.1,144.9 745.9,166.3 759.7,204.4 773.4,198.8 787.2,189.5 800.9,186.7 814.7,200.9 828.5,236.0 842.2,215.3 856.0,210.8" class="line"/>
-      <circle cx="856.0" cy="210.8" r="4.5" class="point"/>
-      <text x="856.0" y="200.8" class="value-label">3697.5200</text>
+      <polygon points="44,236 44.0,124.3 57.8,139.1 71.5,122.0 85.3,136.0 99.1,128.2 112.8,93.3 126.6,79.8 140.3,55.2 154.1,38.7 167.9,58.8 181.6,51.0 195.4,63.3 209.2,63.1 222.9,28.7 236.7,24.0 250.4,83.4 264.2,77.7 278.0,76.8 291.7,91.1 305.5,86.5 319.3,72.2 333.0,44.9 346.8,47.6 360.5,26.5 374.3,30.5 388.1,54.3 401.8,53.9 415.6,61.3 429.4,59.7 443.1,54.8 456.9,48.0 470.6,58.7 484.4,87.3 498.2,89.1 511.9,102.1 525.7,85.2 539.5,95.1 553.2,72.6 567.0,49.0 580.7,47.7 594.5,57.3 608.3,87.2 622.0,127.3 635.8,123.1 649.6,115.8 663.3,134.6 677.1,133.4 690.8,143.7 704.6,141.4 718.4,162.3 732.1,199.3 745.9,193.9 759.7,184.8 773.4,182.0 787.2,195.9 800.9,230.0 814.7,209.9 828.5,205.5 842.2,236.0 856.0,215.4 856,236" class="area"/>
+      <polyline points="44.0,124.3 57.8,139.1 71.5,122.0 85.3,136.0 99.1,128.2 112.8,93.3 126.6,79.8 140.3,55.2 154.1,38.7 167.9,58.8 181.6,51.0 195.4,63.3 209.2,63.1 222.9,28.7 236.7,24.0 250.4,83.4 264.2,77.7 278.0,76.8 291.7,91.1 305.5,86.5 319.3,72.2 333.0,44.9 346.8,47.6 360.5,26.5 374.3,30.5 388.1,54.3 401.8,53.9 415.6,61.3 429.4,59.7 443.1,54.8 456.9,48.0 470.6,58.7 484.4,87.3 498.2,89.1 511.9,102.1 525.7,85.2 539.5,95.1 553.2,72.6 567.0,49.0 580.7,47.7 594.5,57.3 608.3,87.2 622.0,127.3 635.8,123.1 649.6,115.8 663.3,134.6 677.1,133.4 690.8,143.7 704.6,141.4 718.4,162.3 732.1,199.3 745.9,193.9 759.7,184.8 773.4,182.0 787.2,195.9 800.9,230.0 814.7,209.9 828.5,205.5 842.2,236.0 856.0,215.4" class="line"/>
+      <circle cx="856.0" cy="215.4" r="4.5" class="point"/>
+      <text x="856.0" y="205.4" class="value-label">3681.4700</text>
     </svg>
 </section>
 <footer class="footer"><span>上证预测打擂台</span><span>GitHub Actions 自动生成 · 仅供研究参考，不构成投资建议</span></footer>
